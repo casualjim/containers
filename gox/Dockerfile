@@ -1,4 +1,4 @@
-FROM golang:1.7
+FROM golang:1.8
 MAINTAINER Ivan Porto Carrero <ivan@flanders.co.nz> (@casualjim)
 
 RUN set -e &&\

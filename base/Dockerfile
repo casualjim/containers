@@ -1,4 +1,4 @@
-FROM alpine:3.5
+FROM alpine
 MAINTAINER Ivan Porto Carrero <ivan@flanders.co.nz> (@casualjim)
 
 ADD su-exec /bin
