@@ -13,7 +13,7 @@ RUN curl -L http://www.oberhumer.com/opensource/ucl/download/ucl-${UCL_VER}.tar.
 
 VOLUME /release
 
-ENV UPX_VER 3.93
+ENV UPX_VER 3.94
 ENV UPX_UCLDIR=/ucl-${UCL_VER}
 RUN git clone https://github.com/upx/upx && cd upx && git checkout v${UPX_VER} && git submodule update --init --recursive && make all
 
