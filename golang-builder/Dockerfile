@@ -14,6 +14,12 @@ RUN set -eux &&\
   apt-get autoremove -yqq &&\
   rm -rf  /tmp/* /var/tmp/* /var/lib/apt/lists/* /usr/share/doc/* /usr/share/locale/* /var/cache/debconf/*-old
 
-Run ver=$(curl -sL https://storage.googleapis.com/kubernetes-release/release/stable.txt) &&\
+RUN ver=$(curl -sL https://storage.googleapis.com/kubernetes-release/release/stable.txt) &&\
   curl -o /usr/bin/kubectl -L'#' https://storage.googleapis.com/kubernetes-release/release/$ver/bin/linux/amd64/kubectl &&\
   chmod +x /usr/bin/kubectl
+
+RUN go get -u -v github.com/alecthomas/gometalinter &&\
+  go get github.com/Masterminds/glide &&\
+  go get -u -v github.com/go-swagger/go-swagger/cmd/swagger &&\
+  go get -u -v github.com/mitchellh/gox &&\
+  gometalinter --install --update
