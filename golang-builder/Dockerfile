@@ -8,7 +8,7 @@ RUN set -eux &&\
   apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D &&\
   echo 'deb https://apt.dockerproject.org/repo debian-jessie main' > /etc/apt/sources.list.d/docker.list &&\
   apt-get update -yqq &&\
-  apt-get install -yqq --no-install-recommends docker-engine make gcc libc-dev libudev-dev &&\
+  apt-get install -yqq --no-install-recommends docker-engine make gcc libc-dev libudev-dev xorriso &&\
   apt-get clean -y &&\
   apt-get autoclean -yqq &&\
   apt-get autoremove -yqq &&\
