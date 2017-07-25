@@ -22,4 +22,5 @@ RUN go get -u -v github.com/alecthomas/gometalinter &&\
   go get github.com/Masterminds/glide &&\
   go get -u -v github.com/go-swagger/go-swagger/cmd/swagger &&\
   go get -u -v github.com/mitchellh/gox &&\
+  go get -u -v github.com/GoASTScanner/gas &&\
   gometalinter --install --update
