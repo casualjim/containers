@@ -6,6 +6,10 @@ on:
   schedule:
     - cron: '0 17 * * 3'  # Every Wednesday at 5PM UTC
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   list-containers:
     runs-on: ubuntu-latest
