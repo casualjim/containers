@@ -1,0 +1,17 @@
+package: libc++abi1-20
+
+essential:
+  - libc++abi1-20_copyright
+
+slices:
+  libs:
+    essential:
+      - libc6_libs
+      - libunwind-20_libs
+    contents:
+      /usr/lib/llvm-20/lib/libc++abi.so.1.0.20:
+      /usr/lib/*-linux-gnu/libc++abi.so.1.0.20:
+
+  copyright:
+    contents:
+      /usr/share/doc/libc++abi1-20/copyright:

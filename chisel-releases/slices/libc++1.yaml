@@ -1,0 +1,6 @@
+package: libc++1
+
+slices:
+  libs:
+    essential:
+      - libc++1-20_libs

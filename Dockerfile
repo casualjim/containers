@@ -6,6 +6,7 @@ FROM ubuntu:${UBUNTU_RELEASE} AS builder
 ARG TARGETARCH
 ARG UBUNTU_RELEASE
 ARG CHISEL_VERSION
+ARG EXTRA_PACKAGES=""
 
 SHELL ["/bin/bash", "-oeux", "pipefail", "-c"]
 
@@ -18,8 +19,11 @@ ADD "https://github.com/canonical/chisel/releases/download/${CHISEL_VERSION}/chi
   chisel.tar.gz
 RUN tar -xvf chisel.tar.gz -C /usr/bin/
 
+# Copy custom chisel release files
+COPY chisel-releases /opt/chisel-releases
+
 RUN mkdir /staging-rootfs \
-  && chisel cut --release "ubuntu-$UBUNTU_RELEASE" --root /staging-rootfs \
+  && chisel cut --release /opt/chisel-releases --root /staging-rootfs \
   base-files_base \
   base-files_release-info \
   base-files_chisel \
@@ -27,14 +31,16 @@ RUN mkdir /staging-rootfs \
   ca-certificates_data \
   tzdata_base \
   tzdata_zoneinfo \
-  media-types_data
+  media-types_data \
+  ${EXTRA_PACKAGES}
 
-RUN cp /etc/passwd /etc/group /staging-rootfs/etc \
-  && install -o ubuntu -g ubuntu -d /staging-rootfs/home/ubuntu
+RUN echo 'appuser:x:10001:10001::/home/appuser:/sbin/nologin' >> /staging-rootfs/etc/passwd \
+  && echo 'appuser:x:10001:' >> /staging-rootfs/etc/group \
+  && install -o 10001 -g 10001 -d /staging-rootfs/home/appuser
 
 FROM scratch
 
 COPY --from=builder /staging-rootfs /
 
-USER ubuntu
-WORKDIR /home/ubuntu
+USER 10001:10001
+WORKDIR /home/appuser

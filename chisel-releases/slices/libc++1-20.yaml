@@ -1,0 +1,18 @@
+package: libc++1-20
+
+essential:
+  - libc++1-20_copyright
+
+slices:
+  libs:
+    essential:
+      - libc++abi1-20_libs
+      - libc6_libs
+      - libunwind-20_libs
+    contents:
+      /usr/lib/llvm-20/lib/libc++.so.1.0.20:
+      /usr/lib/*-linux-gnu/libc++.so.1.0.20:
+
+  copyright:
+    contents:
+      /usr/share/doc/libc++1-20/copyright:
