@@ -7,6 +7,7 @@ ARG TARGETARCH
 ARG UBUNTU_RELEASE
 ARG CHISEL_VERSION
 ARG EXTRA_PACKAGES=""
+ARG POST_INSTALL_SCRIPT=""
 
 SHELL ["/bin/bash", "-oeux", "pipefail", "-c"]
 
@@ -37,6 +38,15 @@ RUN mkdir /staging-rootfs \
 RUN echo 'appuser:x:10001:10001::/home/appuser:/sbin/nologin' >> /staging-rootfs/etc/passwd \
   && echo 'appuser:x:10001:' >> /staging-rootfs/etc/group \
   && install -o 10001 -g 10001 -d /staging-rootfs/home/appuser
+
+# Optional: Run post-install script if provided
+COPY post-install/ /post-install/
+ARG POST_INSTALL_SCRIPT
+RUN if [ -n "$POST_INSTALL_SCRIPT" ] && [ -f "/post-install/$POST_INSTALL_SCRIPT" ]; then \
+  echo "Running post-install script: $POST_INSTALL_SCRIPT" && \
+  chmod +x "/post-install/$POST_INSTALL_SCRIPT" && \
+  "/post-install/$POST_INSTALL_SCRIPT"; \
+  fi
 
 FROM scratch
 

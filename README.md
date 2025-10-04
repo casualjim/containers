@@ -43,6 +43,21 @@ Base image with LLVM C++ standard library and OpenSSL 3 support.
 - **User**: `ubuntu` (non-root)
 - **Extra packages**: `libc++1_libs`, `libssl3t64_libs`
 
+### bun
+Bun runtime container with full Node.js compatibility and SSL support.
+
+- **Base**: Chiseled Ubuntu 25.10
+- **Repository**: `ghcr.io/casualjim/bun:latest`
+- **User**: `appuser` (UID 10001, non-root)
+- **Bun Version**: 1.2.23
+- **Extra packages**: `libstdc++6_libs`, `libgcc-s1_libs`, `libssl3t64_libs`, `zlib1g_libs`, `openssl_bins`
+- **Features**:
+  - Bun runtime with JavaScript/TypeScript support
+  - Node.js compatibility layer (node symlink)
+  - Package runner (`bunx`)
+  - Optimized for container environments (transpiler cache disabled)
+  - GPG-verified binary downloads
+
 ## Building Images
 
 Build all images:
@@ -55,12 +70,14 @@ Build a specific image:
 docker buildx bake static
 docker buildx bake libc
 docker buildx bake libcxx-ssl
+docker buildx bake bun
 ```
 
 Build with custom variables:
 ```bash
 docker buildx bake --set "*.args.UBUNTU_RELEASE=24.04"
 docker buildx bake --set "*.args.CHISEL_VERSION=v1.1.0"
+docker buildx bake --set "bun.args.BUN_VERSION=latest"
 ```
 
 ## Custom Chisel Slices
@@ -73,6 +90,25 @@ This repository includes custom chisel slice definitions for packages not yet av
 - `libunwind-20` - LLVM stack unwinding library
 
 **Want to add more packages?** See the [Adding Custom Chisel Slices](docs/adding-custom-slices.md) runbook for a detailed step-by-step guide.
+
+## Post-Install Scripts
+
+The build system supports custom post-install scripts for advanced image customization. Scripts are located in `post-install/` and can be enabled by setting the `POST_INSTALL_SCRIPT` build arg:
+
+```bash
+docker buildx bake --set "myimage.args.POST_INSTALL_SCRIPT=install-custom.sh"
+```
+
+Available scripts:
+- `install-bun.sh` - Downloads, verifies, and installs Bun runtime
+
+Post-install scripts have access to:
+- `TARGETARCH` - Target architecture (amd64, arm64)
+- `UBUNTU_RELEASE` - Ubuntu version
+- `STAGING_ROOT` - Path to staging rootfs (default: `/staging-rootfs`)
+- Custom build args passed from `docker-bake.hcl`
+
+See `post-install/.gitkeep` for more details on creating custom scripts.
 
 ### Syncing Chisel Slices
 

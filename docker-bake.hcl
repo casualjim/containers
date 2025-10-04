@@ -89,34 +89,43 @@ target "libcxx-ssl" {
   ]
 }
 
-# Example: Add more variants as needed
-# Uncomment and customize these examples:
+# bun-builder: Internal target that builds the chisel rootfs with Bun
+# This is not pushed as a final image, just used as a build stage
+target "bun-builder" {
+  inherits = ["chisel-common"]
+  context  = "."
+  args = {
+    EXTRA_PACKAGES       = "libstdc++6_libs libgcc-s1_libs libssl3t64_libs zlib1g_libs openssl_bins"
+    POST_INSTALL_SCRIPT  = "install-bun.sh"
+    BUN_VERSION          = "latest"
+    STAGING_ROOT         = "/staging-rootfs"
+  }
+  # Don't create tags for this internal builder
+  output = ["type=cacheonly"]
+}
 
-# target "node" {
-#   inherits = ["chisel-common"]
-#   context  = "."
-#   args = {
-#     EXTRA_PACKAGES = "libstdc++6_libs libgcc-s1_libs"
-#   }
-#   tags = [
-#     "${REGISTRY}/node:${TAG}",
-#     "${REGISTRY}/node:${UBUNTU_RELEASE}",
-#   ]
-# }
-
-# target "python" {
-#   inherits = ["chisel-common"]
-#   context  = "."
-#   args = {
-#     EXTRA_PACKAGES = "libpython3.13-minimal_libs libexpat1_libs"
-#   }
-#   tags = [
-#     "${REGISTRY}/python:${TAG}",
-#     "${REGISTRY}/python:${UBUNTU_RELEASE}",
-#   ]
-# }
+# bun: Final chisel image with Bun runtime and ENTRYPOINT
+target "bun" {
+  dockerfile-inline = <<EOD
+FROM bun-builder
+ENV BUN_INSTALL_BIN /usr/local/bin
+ENV BUN_RUNTIME_TRANSPILER_CACHE_PATH "0"
+ENV PATH "$${PATH}:/usr/local/bun-node-fallback-bin"
+ENTRYPOINT ["/usr/local/bin/bun"]
+EOD
+  context    = "."
+  platforms  = ["linux/amd64", "linux/arm64"]
+  contexts = {
+    # Map the "bun-builder" name used in FROM to the target
+    bun-builder = "target:bun-builder"
+  }
+  tags = [
+    "${REGISTRY}/bun:${TAG}",
+    "${REGISTRY}/bun:${UBUNTU_RELEASE}",
+  ]
+}
 
 # Group to build all images
 group "default" {
-  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl"]
+  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "bun"]
 }

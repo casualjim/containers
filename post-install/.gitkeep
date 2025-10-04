@@ -1,0 +1,15 @@
+# Post-install scripts directory
+# 
+# Scripts in this directory can be executed during the build process
+# by setting the POST_INSTALL_SCRIPT build arg to the script name.
+#
+# Scripts have access to:
+# - TARGETARCH: Target architecture (amd64, arm64, etc.)
+# - UBUNTU_RELEASE: Ubuntu version being used
+# - STAGING_ROOT: Path to the staging rootfs (default: /staging-rootfs)
+# - Any other build args passed via docker-bake.hcl
+#
+# Example scripts:
+# - install-bun.sh: Installs Bun runtime
+# - install-uv.sh: Could install Python uv package manager
+# - install-deno.sh: Could install Deno runtime
