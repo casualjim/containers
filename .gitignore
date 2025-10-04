@@ -19,6 +19,9 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Docker
+.docker/
+
 # Build artifacts (if any)
 build/
 dist/

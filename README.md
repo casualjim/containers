@@ -1,22 +1,28 @@
 # Multi-Container Image Repository
 
-This repository contains definitions for multiple container images, built and published to GitHub Container Registry (GHCR) using Chiseled Ubuntu bases for minimalism.
+This repository contains definitions for multiple minimal container images, built and published to GitHub Container Registry (GHCR) using Chiseled Ubuntu bases for security and minimalism.
 
 ## Containers
 
 ### gostatic
-A container image for the gostatic static site generator, based on Chiseled Ubuntu.
+A minimal container image based on Chiseled Ubuntu, designed for static applications and Go binaries that don't require additional system libraries.
 
 - **Dockerfile**: `gostatic/Dockerfile`
+- **Base**: Chiseled Ubuntu 25.10 with essential system files only
 - **Default repository**: `ghcr.io/casualjim/gostatic`
 - **Default tag**: `latest`
+- **User**: `ubuntu` (non-root)
+- **Includes**: Base files, CA certificates, timezone data, media types
 
 ### golibc
-A container image based on Chiseled Ubuntu.
+A minimal container image based on Chiseled Ubuntu with C++ standard library support, suitable for applications requiring `libstdc++6`.
 
 - **Dockerfile**: `golibc/Dockerfile`
+- **Base**: Chiseled Ubuntu 25.10 with C++ standard library
 - **Default repository**: `ghcr.io/casualjim/golibc`
 - **Default tag**: `latest`
+- **User**: `ubuntu` (non-root)
+- **Includes**: Everything from gostatic + `libstdc++6_libs`
 
 ## Customization
 
