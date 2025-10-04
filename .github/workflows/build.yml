@@ -17,7 +17,7 @@ jobs:
       - name: Find containers
         id: find
         run: |
-          containers=$(find . -mindepth 1 -maxdepth 1 -type d -exec test -e {}/Dockerfile \; -print | sed 's|^\./||' | jq -R -s 'split("\n") | map(select(. != ""))')
+          containers=$(find . -mindepth 1 -maxdepth 1 -type d -exec test -e {}/Dockerfile \; -print | sed 's|^\./||' | jq -R -s -c 'split("\n") | map(select(. != ""))')
           echo "containers=$containers" >> $GITHUB_OUTPUT
 
   build:
