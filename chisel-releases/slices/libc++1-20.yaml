@@ -10,8 +10,8 @@ slices:
       - libc6_libs
       - libunwind-20_libs
     contents:
-      /usr/lib/llvm-20/lib/libc++.so.1.0.20:
-      /usr/lib/*-linux-gnu/libc++.so.1.0.20:
+      /usr/lib/llvm-20/lib/libc++.so.1*:
+      /usr/lib/*-linux-gnu/libc++.so.1*:
 
   copyright:
     contents:

@@ -9,8 +9,8 @@ slices:
       - libc6_libs
       - libgcc-s1_libs
     contents:
-      /usr/lib/llvm-20/lib/libunwind.so.1.0.20:
-      /usr/lib/*-linux-gnu/libunwind.so.1.0.20:
+      /usr/lib/llvm-20/lib/libunwind.so.1*:
+      /usr/lib/*-linux-gnu/libunwind.so.1*:
 
   copyright:
     contents:

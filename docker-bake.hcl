@@ -97,8 +97,6 @@ target "bun-builder" {
   args = {
     EXTRA_PACKAGES       = "libstdc++6_libs libgcc-s1_libs libssl3t64_libs zlib1g_libs openssl_bins"
     POST_INSTALL_SCRIPT  = "install-bun.sh"
-    BUN_VERSION          = "latest"
-    STAGING_ROOT         = "/staging-rootfs"
   }
   # Don't create tags for this internal builder
   output = ["type=cacheonly"]
