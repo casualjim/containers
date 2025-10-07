@@ -68,7 +68,7 @@ target "libcxx" {
   inherits = ["chisel-common"]
   context  = "."
   args = {
-    EXTRA_PACKAGES = "libc++1_libs"
+    EXTRA_PACKAGES = "libstdc++6_libs libc++1_libs"
   }
   tags = [
     "${REGISTRY}/bare:libcxx",
@@ -81,7 +81,7 @@ target "libcxx-ssl" {
   inherits = ["chisel-common"]
   context  = "."
   args = {
-    EXTRA_PACKAGES = "libc++1_libs libssl3t64_libs openssl_bins"
+    EXTRA_PACKAGES = "libstdc++6_libs libc++1_libs libssl3t64_libs openssl_bins"
   }
   tags = [
     "${REGISTRY}/bare:libcxx-ssl",
