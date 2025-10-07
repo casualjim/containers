@@ -68,7 +68,8 @@ target "libcxx" {
   inherits = ["chisel-common"]
   context  = "."
   args = {
-    EXTRA_PACKAGES = "libstdc++6_libs libc++1_libs"
+    EXTRA_PACKAGES      = "libstdc++6_libs libc++1_libs"
+    POST_INSTALL_SCRIPT = "install-libcxx.sh"
   }
   tags = [
     "${REGISTRY}/bare:libcxx",
@@ -81,7 +82,8 @@ target "libcxx-ssl" {
   inherits = ["chisel-common"]
   context  = "."
   args = {
-    EXTRA_PACKAGES = "libstdc++6_libs libc++1_libs libssl3t64_libs openssl_bins"
+    EXTRA_PACKAGES      = "libstdc++6_libs libc++1_libs libssl3t64_libs openssl_bins"
+    POST_INSTALL_SCRIPT = "install-libcxx.sh"
   }
   tags = [
     "${REGISTRY}/bare:libcxx-ssl",
