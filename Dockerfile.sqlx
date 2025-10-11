@@ -1,0 +1,10 @@
+FROM rust:alpine AS builder
+
+RUN apk add --no-cache openssl-dev zlib-dev zstd-dev pkgconfig musl-dev libssl3
+RUN cargo install sqlx-cli --no-default-features --features rustls,postgres
+
+FROM alpine
+RUN apk add --no-cache musl libssl3 zlib zstd
+COPY --from=builder /usr/local/cargo/bin/sqlx /usr/local/bin/sqlx
+ENTRYPOINT ["/usr/local/bin/sqlx"]
+CMD ["--help"]

@@ -37,7 +37,8 @@ RUN mkdir /staging-rootfs \
 
 RUN echo 'appuser:x:10001:10001::/home/appuser:/sbin/nologin' >> /staging-rootfs/etc/passwd \
   && echo 'appuser:x:10001:' >> /staging-rootfs/etc/group \
-  && install -o 10001 -g 10001 -d /staging-rootfs/home/appuser
+  && install -d /staging-rootfs/home/appuser \
+  && chown 10001:10001 /staging-rootfs/home/appuser
 
 # Optional: Run post-install script if provided
 COPY post-install/ /post-install/

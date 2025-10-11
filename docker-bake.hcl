@@ -14,6 +14,7 @@ variable "TAG" {
   default = "latest"
 }
 
+
 # Common configuration for all chisel-based images
 target "chisel-common" {
   dockerfile = "Dockerfile"
@@ -104,6 +105,17 @@ target "bun-builder" {
   output = ["type=cacheonly"]
 }
 
+# sqlx-cli: Chisel image with sqlx-cli runtime
+target "sqlx-cli" {
+  dockerfile = "Dockerfile.sqlx"
+  context    = "."
+  platforms  = ["linux/amd64", "linux/arm64"]
+  tags = [
+    "${REGISTRY}/sqlx-cli:${TAG}",
+    "${REGISTRY}/sqlx-cli:${UBUNTU_RELEASE}",
+  ]
+}
+
 # bun: Final chisel image with Bun runtime and ENTRYPOINT
 target "bun" {
   dockerfile-inline = <<EOD
@@ -127,5 +139,5 @@ EOD
 
 # Group to build all images
 group "default" {
-  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "bun"]
+  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "sqlx-cli", "bun"]
 }
