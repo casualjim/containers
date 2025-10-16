@@ -75,8 +75,8 @@ find_dependencies() {
   fi
   
   # Extract essential dependencies using yq or grep
-  if command -v yq &> /dev/null; then
-    yq eval '.slices.*.essential[]' "${slice_file}" 2>/dev/null | sed 's/_.*$//' | sort -u
+  if command -v yq >/dev/null 2>&1 && yq --version 2>&1 | grep -qi 'mikefarah'; then
+    yq eval '.slices.*.essential // [] | .[]' "${slice_file}" 2>/dev/null | sed 's/_.*$//' | sort -u
   else
     # Fallback to grep/awk parsing
     awk '/essential:$/,/^[^ ]/ {
