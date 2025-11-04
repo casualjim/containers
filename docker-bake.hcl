@@ -10,6 +10,10 @@ variable "REGISTRY" {
   default = "ghcr.io/casualjim"
 }
 
+variable "RUST_VERSION" {
+  default = "1.91.0"
+}
+
 variable "TAG" {
   default = "latest"
 }
@@ -92,6 +96,20 @@ target "libcxx-ssl" {
   ]
 }
 
+# libcxx-ssl-tesseract: libcxx-ssl image with Tesseract OCR and all language packs
+target "libcxx-ssl-tesseract" {
+  inherits = ["chisel-common"]
+  context  = "."
+  args = {
+    EXTRA_PACKAGES      = "libstdc++6_libs libc++1_libs libssl3t64_libs openssl_bins bash_bins"
+    POST_INSTALL_SCRIPT = "install-libcxx-tesseract.sh"
+  }
+  tags = [
+    "${REGISTRY}/bare:libcxx-ssl-tesseract",
+    "${REGISTRY}/bare:libcxx-ssl-tesseract-${UBUNTU_RELEASE}",
+  ]
+}
+
 # bun-builder: Internal target that builds the chisel rootfs with Bun
 # This is not pushed as a final image, just used as a build stage
 target "bun-builder" {
@@ -120,9 +138,9 @@ target "sqlx-cli" {
 target "bun" {
   dockerfile-inline = <<EOD
 FROM bun-builder
-ENV BUN_INSTALL_BIN /usr/local/bin
-ENV BUN_RUNTIME_TRANSPILER_CACHE_PATH "0"
-ENV PATH "$${PATH}:/usr/local/bun-node-fallback-bin"
+ENV BUN_INSTALL_BIN=/usr/local/bin
+ENV BUN_RUNTIME_TRANSPILER_CACHE_PATH="0"
+ENV PATH="$${PATH}:/usr/local/bun-node-fallback-bin"
 ENTRYPOINT ["/usr/local/bin/bun"]
 EOD
   context    = "."
@@ -137,7 +155,22 @@ EOD
   ]
 }
 
+target "rustbuilder" {
+  dockerfile = "Dockerfile.rustbuilder"
+  context    = "."
+  platforms  = ["linux/amd64", "linux/arm64"]
+  tags = [
+    "${REGISTRY}/rust-builder:${TAG}",
+    "${REGISTRY}/rust-builder:${UBUNTU_RELEASE}-${RUST_VERSION}",
+  ]
+  args = {
+    UBUNTU_RELEASE = UBUNTU_RELEASE
+    RUST_VERSION = RUST_VERSION
+  }
+}
+
+
 # Group to build all images
 group "default" {
-  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "sqlx-cli", "bun"]
+  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "sqlx-cli", "bun", "rustbuilder"]
 }
