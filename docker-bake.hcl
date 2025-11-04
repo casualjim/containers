@@ -14,6 +14,10 @@ variable "RUST_VERSION" {
   default = "1.91.0"
 }
 
+variable "BUN_VERSION" {
+  default = "1.3.1"
+}
+
 variable "TAG" {
   default = "latest"
 }
@@ -161,11 +165,12 @@ target "rustbuilder" {
   platforms  = ["linux/amd64", "linux/arm64"]
   tags = [
     "${REGISTRY}/rust-builder:${TAG}",
-    "${REGISTRY}/rust-builder:${UBUNTU_RELEASE}-${RUST_VERSION}",
+    "${REGISTRY}/rust-builder:${UBUNTU_RELEASE}-${RUST_VERSION}-${BUN_VERSION}",
   ]
   args = {
     UBUNTU_RELEASE = "24.04"
     RUST_VERSION = RUST_VERSION
+    BUN_VERSION = BUN_VERSION
   }
 }
 
