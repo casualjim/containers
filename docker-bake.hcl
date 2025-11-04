@@ -164,7 +164,7 @@ target "rustbuilder" {
     "${REGISTRY}/rust-builder:${UBUNTU_RELEASE}-${RUST_VERSION}",
   ]
   args = {
-    UBUNTU_RELEASE = UBUNTU_RELEASE
+    UBUNTU_RELEASE = "24.04"
     RUST_VERSION = RUST_VERSION
   }
 }
