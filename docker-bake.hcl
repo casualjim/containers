@@ -22,6 +22,10 @@ variable "TAG" {
   default = "latest"
 }
 
+variable "BUILD_NUMBER" {
+  default = "local"
+}
+
 
 # Common configuration for all chisel-based images
 target "chisel-common" {
@@ -43,6 +47,7 @@ target "static" {
   tags = [
     "${REGISTRY}/bare:static",
     "${REGISTRY}/bare:static-${UBUNTU_RELEASE}",
+    "${REGISTRY}/bare:static-${UBUNTU_RELEASE}-${BUILD_NUMBER}",
   ]
 }
 
@@ -56,6 +61,7 @@ target "libc" {
   tags = [
     "${REGISTRY}/bare:libc",
     "${REGISTRY}/bare:libc-${UBUNTU_RELEASE}",
+    "${REGISTRY}/bare:libc-${UBUNTU_RELEASE}-${BUILD_NUMBER}",
   ]
 }
 
@@ -69,6 +75,7 @@ target "libc-ssl" {
   tags = [
     "${REGISTRY}/bare:libc-ssl",
     "${REGISTRY}/bare:libc-ssl-${UBUNTU_RELEASE}",
+    "${REGISTRY}/bare:libc-ssl-${UBUNTU_RELEASE}-${BUILD_NUMBER}",
   ]
 }
 
@@ -83,6 +90,7 @@ target "libcxx" {
   tags = [
     "${REGISTRY}/bare:libcxx",
     "${REGISTRY}/bare:libcxx-${UBUNTU_RELEASE}",
+    "${REGISTRY}/bare:libcxx-${UBUNTU_RELEASE}-${BUILD_NUMBER}",
   ]
 }
 
@@ -97,6 +105,7 @@ target "libcxx-ssl" {
   tags = [
     "${REGISTRY}/bare:libcxx-ssl",
     "${REGISTRY}/bare:libcxx-ssl-${UBUNTU_RELEASE}",
+    "${REGISTRY}/bare:libcxx-ssl-${UBUNTU_RELEASE}-${BUILD_NUMBER}",
   ]
 }
 
@@ -111,6 +120,7 @@ target "libcxx-ssl-tesseract" {
   tags = [
     "${REGISTRY}/bare:libcxx-ssl-tesseract",
     "${REGISTRY}/bare:libcxx-ssl-tesseract-${UBUNTU_RELEASE}",
+    "${REGISTRY}/bare:libcxx-ssl-tesseract-${UBUNTU_RELEASE}-${BUILD_NUMBER}",
   ]
 }
 
@@ -135,6 +145,7 @@ target "sqlx-cli" {
   tags = [
     "${REGISTRY}/sqlx-cli:${TAG}",
     "${REGISTRY}/sqlx-cli:${UBUNTU_RELEASE}",
+    "${REGISTRY}/sqlx-cli:${UBUNTU_RELEASE}-${BUILD_NUMBER}",
   ]
 }
 
@@ -156,6 +167,7 @@ EOD
   tags = [
     "${REGISTRY}/bun:${TAG}",
     "${REGISTRY}/bun:${UBUNTU_RELEASE}",
+    "${REGISTRY}/bun:${UBUNTU_RELEASE}-${BUILD_NUMBER}",
   ]
 }
 
@@ -165,7 +177,8 @@ target "rustbuilder" {
   platforms  = ["linux/amd64", "linux/arm64"]
   tags = [
     "${REGISTRY}/rust-builder:${TAG}",
-    "${REGISTRY}/rust-builder:${UBUNTU_RELEASE}-${RUST_VERSION}-${BUN_VERSION}",
+    "${REGISTRY}/rust-builder:24.04-${RUST_VERSION}-${BUN_VERSION}",
+    "${REGISTRY}/rust-builder:24.04-${RUST_VERSION}-${BUN_VERSION}-${BUILD_NUMBER}",
   ]
   args = {
     UBUNTU_RELEASE = "24.04"
