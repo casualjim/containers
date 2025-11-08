@@ -26,16 +26,13 @@ RUN apt-get update &&\
   unzip \
   mold \
   sccache &&\
-  curl -sSL https://apt.llvm.org/llvm.sh | bash -s 20 &&\
-  apt-get install -y \
-  libnode-dev \
-  npm \
-  libc++-dev &&\
+  curl -sSL https://apt.llvm.org/llvm.sh | bash -s 21 &&\
+  apt-get install -y libnode-dev npm libc++-dev &&\
   rm -rf /var/lib/apt/lists/*
 
 ENV CXXFLAGS=-stdlib=libc++ \
-  CC=clang-20 \
-  CXX=clang++-20 \
+  CC=clang-21 \
+  CXX=clang++-21 \
   CXXSTDLIB=c++ \
   RUSTUP_HOME=/usr/local/rustup \
   CARGO_HOME=/usr/local/cargo \
@@ -46,11 +43,7 @@ ENV CXXFLAGS=-stdlib=libc++ \
 RUN set -eux; \
   \
   apt-get update; \
-  apt-get install -y --no-install-recommends \
-  ca-certificates \
-  gcc \
-  libc6-dev \
-  wget \
+  apt-get install -y --no-install-recommends ca-certificates gcc libc6-dev wget \
   ; \
   \
   arch="$(dpkg --print-architecture)"; \
@@ -104,14 +97,24 @@ RUN curl -fsSL https://bun.sh/install | BUN_INSTALL=/usr/local bash -s - "bun-v$
 
 ADD cargo-config.toml /.cargo/config.toml
 
+RUN apt-get update &&\
+    apt-get install ca-certificates curl -y && \
+    install -m 0755 -d /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && \
+    chmod a+r /etc/apt/keyrings/docker.asc && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+    apt-get update && \
+    apt-get install docker-ce-cli docker-buildx-plugin docker-compose-plugin -y
+
 # squash layers
 FROM scratch AS final
 
 ARG RUST_VERSION
 
 ENV CXXFLAGS=-stdlib=libc++ \
-  CC=clang-20 \
-  CXX=clang++-20 \
+  CC=clang-21 \
+  CXX=clang++-21 \
   CXXSTDLIB=c++ \
   RUSTUP_HOME=/usr/local/rustup \
   CARGO_HOME=/usr/local/cargo \
