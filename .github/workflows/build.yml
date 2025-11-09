@@ -31,4 +31,4 @@ jobs:
           push: true
           files: docker-bake.hcl
           set: |
-            *.BUILD_NUMBER=${{ github.run_number }}
+            BUILD_NUMBER=${{ github.run_number }}
