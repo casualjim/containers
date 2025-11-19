@@ -63,6 +63,16 @@ To add more tools to auto-update:
 4. Add update logic with sed/awk
 5. Update commit message and PR body logic
 
+### Testing
+
+The workflow can be tested in multiple ways:
+
+- **Local testing**: Run `./test-update-versions.sh` to validate core logic
+- **Dry-run testing**: Use the "Test Update Versions (Dry Run)" workflow in GitHub Actions
+- **Manual trigger**: Use workflow_dispatch to test end-to-end
+
+See [Testing the Update Workflow](testing-update-workflow.md) for detailed testing instructions.
+
 ## Chisel Slice Updates
 
 See the existing `.github/workflows/sync-chisel.yml` for automatic chisel slice synchronization.

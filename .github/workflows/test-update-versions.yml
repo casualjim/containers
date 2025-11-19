@@ -1,0 +1,153 @@
+name: Test Update Versions (Dry Run)
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_rust_version:
+        description: 'Test Rust version (leave empty to fetch latest)'
+        required: false
+        default: ''
+      test_bun_version:
+        description: 'Test Bun version (leave empty to fetch latest)'
+        required: false
+        default: ''
+      skip_pr_creation:
+        description: 'Skip PR creation (dry-run mode)'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  test-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Get latest Rust version
+        id: rust-version
+        run: |
+          if [ -n "${{ inputs.test_rust_version }}" ]; then
+            LATEST_RUST="${{ inputs.test_rust_version }}"
+            echo "Using test Rust version: $LATEST_RUST"
+          else
+            LATEST_RUST=$(curl -s https://static.rust-lang.org/dist/channel-rust-stable.toml | \
+              awk '/^\[pkg\.rust\]$/,/^version = / {if (/^version = /) {print; exit}}' | \
+              sed -E 's/version = "([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+            echo "Fetched latest Rust version: $LATEST_RUST"
+          fi
+          
+          echo "version=$LATEST_RUST" >> $GITHUB_OUTPUT
+
+      - name: Get latest Bun version
+        id: bun-version
+        run: |
+          if [ -n "${{ inputs.test_bun_version }}" ]; then
+            LATEST_BUN="${{ inputs.test_bun_version }}"
+            echo "Using test Bun version: $LATEST_BUN"
+          else
+            LATEST_BUN=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              https://api.github.com/repos/oven-sh/bun/releases | \
+              jq -r '[.[] | select(.prerelease == false and .draft == false)] | first | .tag_name' | \
+              sed 's/^bun-v//')
+            echo "Fetched latest Bun version: $LATEST_BUN"
+          fi
+          
+          echo "version=$LATEST_BUN" >> $GITHUB_OUTPUT
+
+      - name: Get current versions from docker-bake.hcl
+        id: current-versions
+        run: |
+          CURRENT_RUST=$(awk '/^variable "RUST_VERSION" \{$/,/^}$/ {if ($1 == "default") {gsub(/"/, "", $3); print $3}}' docker-bake.hcl)
+          CURRENT_BUN=$(awk '/^variable "BUN_VERSION" \{$/,/^}$/ {if ($1 == "default") {gsub(/"/, "", $3); print $3}}' docker-bake.hcl)
+          
+          echo "Current Rust version: $CURRENT_RUST"
+          echo "Current Bun version: $CURRENT_BUN"
+          echo "rust=$CURRENT_RUST" >> $GITHUB_OUTPUT
+          echo "bun=$CURRENT_BUN" >> $GITHUB_OUTPUT
+
+      - name: Check if updates are needed
+        id: check-updates
+        run: |
+          RUST_UPDATE="false"
+          BUN_UPDATE="false"
+          UPDATE_NEEDED="false"
+          
+          if [ "${{ steps.rust-version.outputs.version }}" != "${{ steps.current-versions.outputs.rust }}" ]; then
+            echo "✓ Rust version update needed: ${{ steps.current-versions.outputs.rust }} -> ${{ steps.rust-version.outputs.version }}"
+            RUST_UPDATE="true"
+            UPDATE_NEEDED="true"
+          else
+            echo "✓ Rust version is up to date: ${{ steps.current-versions.outputs.rust }}"
+          fi
+          
+          if [ "${{ steps.bun-version.outputs.version }}" != "${{ steps.current-versions.outputs.bun }}" ]; then
+            echo "✓ Bun version update needed: ${{ steps.current-versions.outputs.bun }} -> ${{ steps.bun-version.outputs.version }}"
+            BUN_UPDATE="true"
+            UPDATE_NEEDED="true"
+          else
+            echo "✓ Bun version is up to date: ${{ steps.current-versions.outputs.bun }}"
+          fi
+          
+          echo "rust_update=$RUST_UPDATE" >> $GITHUB_OUTPUT
+          echo "bun_update=$BUN_UPDATE" >> $GITHUB_OUTPUT
+          echo "update_needed=$UPDATE_NEEDED" >> $GITHUB_OUTPUT
+
+      - name: Test update docker-bake.hcl (dry-run)
+        if: steps.check-updates.outputs.update_needed == 'true'
+        run: |
+          echo "=== Dry-run mode: Simulating updates ==="
+          
+          # Create a test copy
+          cp docker-bake.hcl /tmp/test-docker-bake.hcl
+          
+          if [ "${{ steps.check-updates.outputs.rust_update }}" == "true" ]; then
+            sed -i '/^variable "RUST_VERSION" {$/,/^}$/ s/default = "[^"]*"/default = "${{ steps.rust-version.outputs.version }}"/' /tmp/test-docker-bake.hcl
+            echo "✓ Would update RUST_VERSION to ${{ steps.rust-version.outputs.version }}"
+          fi
+          
+          if [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ]; then
+            sed -i '/^variable "BUN_VERSION" {$/,/^}$/ s/default = "[^"]*"/default = "${{ steps.bun-version.outputs.version }}"/' /tmp/test-docker-bake.hcl
+            echo "✓ Would update BUN_VERSION to ${{ steps.bun-version.outputs.version }}"
+          fi
+          
+          echo ""
+          echo "=== Changes that would be made ==="
+          diff -u docker-bake.hcl /tmp/test-docker-bake.hcl || true
+
+      - name: Test summary
+        if: always()
+        run: |
+          echo "=========================================="
+          echo "Test Update Versions - Summary"
+          echo "=========================================="
+          echo ""
+          echo "Current versions:"
+          echo "  Rust: ${{ steps.current-versions.outputs.rust }}"
+          echo "  Bun:  ${{ steps.current-versions.outputs.bun }}"
+          echo ""
+          echo "Latest versions:"
+          echo "  Rust: ${{ steps.rust-version.outputs.version }}"
+          echo "  Bun:  ${{ steps.bun-version.outputs.version }}"
+          echo ""
+          echo "Updates needed:"
+          echo "  Rust: ${{ steps.check-updates.outputs.rust_update }}"
+          echo "  Bun:  ${{ steps.check-updates.outputs.bun_update }}"
+          echo ""
+          echo "Dry-run mode: ${{ inputs.skip_pr_creation }}"
+          echo ""
+          if [ "${{ steps.check-updates.outputs.update_needed }}" == "true" ]; then
+            echo "✓ Workflow logic is working correctly!"
+            echo "  Updates would be made if run in production mode."
+          else
+            echo "✓ No updates needed at this time."
+            echo "  All versions are up to date."
+          fi
+          echo ""
+          echo "=========================================="
