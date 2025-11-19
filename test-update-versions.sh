@@ -42,9 +42,7 @@ test_fail() {
 test_rust_version_fetch() {
     log_info "Test 1: Fetching latest Rust version..."
     
-    RUST_VERSION=$(curl -s https://static.rust-lang.org/dist/channel-rust-stable.toml | \
-        awk '/^\[pkg\.rust\]$/,/^version = / {if (/^version = /) {print; exit}}' | \
-        sed -E 's/version = "([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
+    RUST_VERSION=$("$REPO_ROOT/scripts/get-rust-version.sh")
     
     if [[ -n "$RUST_VERSION" ]] && [[ "$RUST_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         test_pass "Fetched Rust version: $RUST_VERSION"
@@ -61,9 +59,7 @@ test_bun_version_fetch() {
     log_info "Test 2: Fetching latest Bun version..."
     
     # Note: This might fail in sandboxed environments
-    BUN_VERSION=$(curl -s https://api.github.com/repos/oven-sh/bun/releases 2>/dev/null | \
-        jq -r '[.[] | select(.prerelease == false and .draft == false)] | first | .tag_name' 2>/dev/null | \
-        sed 's/^bun-v//' || echo "")
+    BUN_VERSION=$("$REPO_ROOT/scripts/get-bun-version.sh" 2>/dev/null || echo "")
     
     if [[ -n "$BUN_VERSION" ]] && [[ "$BUN_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         test_pass "Fetched Bun version: $BUN_VERSION"
@@ -83,8 +79,8 @@ test_bun_version_fetch() {
 test_version_extraction() {
     log_info "Test 3: Extracting versions from docker-bake.hcl..."
     
-    CURRENT_RUST=$(awk '/^variable "RUST_VERSION" \{$/,/^}$/ {if ($1 == "default") {gsub(/"/, "", $3); print $3}}' "$REPO_ROOT/docker-bake.hcl")
-    CURRENT_BUN=$(awk '/^variable "BUN_VERSION" \{$/,/^}$/ {if ($1 == "default") {gsub(/"/, "", $3); print $3}}' "$REPO_ROOT/docker-bake.hcl")
+    CURRENT_RUST=$("$REPO_ROOT/scripts/get-current-rust-version.sh" "$REPO_ROOT/docker-bake.hcl")
+    CURRENT_BUN=$("$REPO_ROOT/scripts/get-current-bun-version.sh" "$REPO_ROOT/docker-bake.hcl")
     
     if [[ -n "$CURRENT_RUST" ]] && [[ "$CURRENT_RUST" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         test_pass "Extracted current Rust version: $CURRENT_RUST"
@@ -113,10 +109,10 @@ test_version_update() {
     
     # Update Rust version to a test value
     TEST_RUST_VERSION="99.99.99"
-    sed -i '/^variable "RUST_VERSION" {$/,/^}$/ s/default = "[^"]*"/default = "'"$TEST_RUST_VERSION"'"/' "$TEST_DIR/test-bake.hcl"
+    "$REPO_ROOT/scripts/update-rust-version.sh" "$TEST_RUST_VERSION" "$TEST_DIR/test-bake.hcl"
     
     # Verify the update
-    UPDATED_RUST=$(awk '/^variable "RUST_VERSION" \{$/,/^}$/ {if ($1 == "default") {gsub(/"/, "", $3); print $3}}' "$TEST_DIR/test-bake.hcl")
+    UPDATED_RUST=$("$REPO_ROOT/scripts/get-current-rust-version.sh" "$TEST_DIR/test-bake.hcl")
     
     if [[ "$UPDATED_RUST" == "$TEST_RUST_VERSION" ]]; then
         test_pass "Rust version update works correctly"
@@ -127,10 +123,10 @@ test_version_update() {
     
     # Update Bun version to a test value
     TEST_BUN_VERSION="88.88.88"
-    sed -i '/^variable "BUN_VERSION" {$/,/^}$/ s/default = "[^"]*"/default = "'"$TEST_BUN_VERSION"'"/' "$TEST_DIR/test-bake.hcl"
+    "$REPO_ROOT/scripts/update-bun-version.sh" "$TEST_BUN_VERSION" "$TEST_DIR/test-bake.hcl"
     
     # Verify the update
-    UPDATED_BUN=$(awk '/^variable "BUN_VERSION" \{$/,/^}$/ {if ($1 == "default") {gsub(/"/, "", $3); print $3}}' "$TEST_DIR/test-bake.hcl")
+    UPDATED_BUN=$("$REPO_ROOT/scripts/get-current-bun-version.sh" "$TEST_DIR/test-bake.hcl")
     
     if [[ "$UPDATED_BUN" == "$TEST_BUN_VERSION" ]]; then
         test_pass "Bun version update works correctly"
@@ -140,7 +136,7 @@ test_version_update() {
     fi
     
     # Verify Rust version wasn't affected by Bun update
-    FINAL_RUST=$(awk '/^variable "RUST_VERSION" \{$/,/^}$/ {if ($1 == "default") {gsub(/"/, "", $3); print $3}}' "$TEST_DIR/test-bake.hcl")
+    FINAL_RUST=$("$REPO_ROOT/scripts/get-current-rust-version.sh" "$TEST_DIR/test-bake.hcl")
     
     if [[ "$FINAL_RUST" == "$TEST_RUST_VERSION" ]]; then
         test_pass "Cross-contamination check: Rust version unchanged after Bun update"

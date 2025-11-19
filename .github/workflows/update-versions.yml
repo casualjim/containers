@@ -21,32 +21,24 @@ jobs:
       - name: Get latest Rust version
         id: rust-version
         run: |
-          # Query the latest stable Rust version from the official Rust toolchain channel
-          LATEST_RUST=$(curl -s https://static.rust-lang.org/dist/channel-rust-stable.toml | \
-            awk '/^\[pkg\.rust\]$/,/^version = / {if (/^version = /) {print; exit}}' | \
-            sed -E 's/version = "([0-9]+\.[0-9]+\.[0-9]+).*/\1/')
-          
+          LATEST_RUST=$(./scripts/get-rust-version.sh)
           echo "Latest Rust version: $LATEST_RUST"
           echo "version=$LATEST_RUST" >> $GITHUB_OUTPUT
 
       - name: Get latest Bun version
         id: bun-version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Query the latest stable Bun release from GitHub API (excluding pre-releases)
-          # Use authenticated requests to avoid rate limiting
-          LATEST_BUN=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            https://api.github.com/repos/oven-sh/bun/releases | \
-            jq -r '[.[] | select(.prerelease == false and .draft == false)] | first | .tag_name' | \
-            sed 's/^bun-v//')
-          
+          LATEST_BUN=$(./scripts/get-bun-version.sh)
           echo "Latest Bun version: $LATEST_BUN"
           echo "version=$LATEST_BUN" >> $GITHUB_OUTPUT
 
       - name: Get current versions from docker-bake.hcl
         id: current-versions
         run: |
-          CURRENT_RUST=$(awk '/^variable "RUST_VERSION" \{$/,/^}$/ {if ($1 == "default") {gsub(/"/, "", $3); print $3}}' docker-bake.hcl)
-          CURRENT_BUN=$(awk '/^variable "BUN_VERSION" \{$/,/^}$/ {if ($1 == "default") {gsub(/"/, "", $3); print $3}}' docker-bake.hcl)
+          CURRENT_RUST=$(./scripts/get-current-rust-version.sh)
+          CURRENT_BUN=$(./scripts/get-current-bun-version.sh)
           
           echo "Current Rust version: $CURRENT_RUST"
           echo "Current Bun version: $CURRENT_BUN"
@@ -84,12 +76,12 @@ jobs:
         if: steps.check-updates.outputs.update_needed == 'true'
         run: |
           if [ "${{ steps.check-updates.outputs.rust_update }}" == "true" ]; then
-            sed -i '/^variable "RUST_VERSION" {$/,/^}$/ s/default = "[^"]*"/default = "${{ steps.rust-version.outputs.version }}"/' docker-bake.hcl
+            ./scripts/update-rust-version.sh "${{ steps.rust-version.outputs.version }}"
             echo "Updated RUST_VERSION to ${{ steps.rust-version.outputs.version }}"
           fi
           
           if [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ]; then
-            sed -i '/^variable "BUN_VERSION" {$/,/^}$/ s/default = "[^"]*"/default = "${{ steps.bun-version.outputs.version }}"/' docker-bake.hcl
+            ./scripts/update-bun-version.sh "${{ steps.bun-version.outputs.version }}"
             echo "Updated BUN_VERSION to ${{ steps.bun-version.outputs.version }}"
           fi
 
