@@ -16,15 +16,14 @@ This directory contains documentation for the container images and automation wo
 
 ### Testing
 
-- **[Quick Test Guide](quick-test-guide.md)** - Quick reference for testing the update workflow ⚡
 - **[Testing Update Workflow](testing-update-workflow.md)** - Comprehensive testing documentation
   - Local testing with test script
-  - GitHub Actions dry-run testing
+  - Manual workflow triggers
   - Troubleshooting guide
 
 ## Quick Links
 
-**Want to test the update workflow?** → Start with [Quick Test Guide](quick-test-guide.md)
+**Want to test the update workflow?** → Run `./test-update-versions.sh` locally or see [Testing Update Workflow](testing-update-workflow.md)
 
 **Need to add a new package?** → See [Adding Custom Slices](adding-custom-slices.md)
 
