@@ -87,7 +87,7 @@ SQLx CLI tool container for database management and migrations.
 ### rust-builder
 Comprehensive Rust development and build container with LLVM/Clang toolchain.
 
-- **Base**: Ubuntu 25.10
+- **Base**: Ubuntu 24.04
 - **Repository**: `ghcr.io/casualjim/rust-builder:latest`
 - **User**: `root`
 - **Rust Version**: 1.91.0
