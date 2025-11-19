@@ -84,6 +84,34 @@ Updates the BUN_VERSION in `docker-bake.hcl`.
 
 **Effect:** Updates the `default` value in the `BUN_VERSION` variable block
 
+### `update-readme-rust-version.sh`
+Updates the Rust version in `README.md` documentation.
+
+**Usage:**
+```bash
+# Default: updates ./README.md
+./scripts/update-readme-rust-version.sh 1.92.0
+
+# Custom file
+./scripts/update-readme-rust-version.sh 1.92.0 /path/to/README.md
+```
+
+**Effect:** Updates all Rust Version fields in the README
+
+### `update-readme-bun-version.sh`
+Updates the Bun version in `README.md` documentation.
+
+**Usage:**
+```bash
+# Default: updates ./README.md
+./scripts/update-readme-bun-version.sh 1.4.0
+
+# Custom file
+./scripts/update-readme-bun-version.sh 1.4.0 /path/to/README.md
+```
+
+**Effect:** Updates all Bun Version fields in the README
+
 ## Design Principles
 
 1. **Single Responsibility:** Each script does one thing well
