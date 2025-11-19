@@ -52,38 +52,7 @@ Failed: 0
 All tests passed!
 ```
 
-### 2. GitHub Actions Dry-Run Test
-
-The `test-update-versions.yml` workflow allows you to test the update process in GitHub Actions without creating a PR.
-
-#### Running the Test Workflow
-
-1. Go to **Actions** tab in GitHub
-2. Select **"Test Update Versions (Dry Run)"** workflow
-3. Click **"Run workflow"**
-4. Configure options:
-   - **test_rust_version**: Leave empty to fetch latest, or specify a version (e.g., `1.92.0`)
-   - **test_bun_version**: Leave empty to fetch latest, or specify a version (e.g., `1.4.0`)
-   - **skip_pr_creation**: Keep checked for dry-run mode
-5. Click **"Run workflow"**
-
-#### What It Does
-
-- Fetches latest versions (or uses provided test versions)
-- Compares with current versions in docker-bake.hcl
-- Shows what changes would be made (without actually making them)
-- Provides a detailed summary of the test run
-
-#### Expected Output
-
-The workflow will show:
-- Current versions in docker-bake.hcl
-- Latest available versions
-- Whether updates are needed
-- A diff showing what would change
-- Summary confirming the workflow logic is working
-
-### 3. Manual Workflow Trigger (Production Test)
+### 2. Manual Workflow Trigger (End-to-End Test)
 
 To test the actual workflow end-to-end (including PR creation):
 
@@ -95,7 +64,7 @@ To test the actual workflow end-to-end (including PR creation):
 
 **⚠️ Warning**: This creates a real PR if updates are available!
 
-### 4. Testing Auto-Merge Behavior
+### 3. Testing Auto-Merge Behavior
 
 To verify auto-merge works correctly:
 
@@ -104,22 +73,6 @@ To verify auto-merge works correctly:
 3. Check that the PR has auto-merge enabled
 4. Monitor the build workflow on the PR
 5. Confirm the PR auto-merges when CI passes
-
-### 5. Testing with Specific Versions
-
-You can test with specific version numbers using the dry-run workflow:
-
-```yaml
-# Example: Test updating to specific versions
-test_rust_version: "1.92.0"
-test_bun_version: "1.4.0"
-skip_pr_creation: true  # Dry-run mode
-```
-
-This is useful for:
-- Testing version format parsing
-- Validating sed commands work with different versions
-- Simulating future updates
 
 ## Continuous Validation
 
@@ -139,7 +92,7 @@ Before deploying changes to the workflow:
 1. Run `./test-update-versions.sh` locally
 2. Validate YAML syntax: `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/update-versions.yml'))"`
 3. Review the workflow file for any syntax errors
-4. Test with the dry-run workflow in GitHub Actions
+4. Optionally test end-to-end with manual workflow trigger
 
 ## Troubleshooting
 
@@ -166,21 +119,19 @@ Before deploying changes to the workflow:
 ## Best Practices
 
 1. **Run local tests first**: Always run `./test-update-versions.sh` before making workflow changes
-2. **Use dry-run mode**: Test with `test-update-versions.yml` before relying on the production workflow
-3. **Monitor first run**: Watch the first scheduled run carefully to catch any issues
-4. **Check logs**: Review workflow logs for any warnings or errors
-5. **Validate PRs**: Manually review the first few auto-generated PRs to ensure quality
+2. **Monitor first run**: Watch the first scheduled run carefully to catch any issues
+3. **Check logs**: Review workflow logs for any warnings or errors
+4. **Validate PRs**: Manually review the first few auto-generated PRs to ensure quality
 
 ## Testing Checklist
 
 Before considering the workflow production-ready:
 
 - [ ] Local test script passes all tests
-- [ ] Dry-run workflow executes successfully
 - [ ] Version fetching works for both Rust and Bun
 - [ ] Version parsing handles current format correctly
 - [ ] sed updates work without breaking docker-bake.hcl
-- [ ] PR creation works (or would work in production mode)
+- [ ] PR creation works (test with manual workflow trigger if needed)
 - [ ] Auto-merge is properly configured
 - [ ] Build workflow triggers on PRs
 - [ ] Build workflow completes successfully on test PR

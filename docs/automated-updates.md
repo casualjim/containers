@@ -54,7 +54,6 @@ The workflow uses reusable shell scripts in the `scripts/` directory:
 
 This ensures the same logic is used by:
 - Production workflow (`.github/workflows/update-versions.yml`)
-- Test workflow (`.github/workflows/test-update-versions.yml`)
 - Local test script (`test-update-versions.sh`)
 
 See `scripts/README.md` for detailed script documentation.
@@ -91,7 +90,6 @@ See `scripts/README.md` for examples and best practices.
 The workflow can be tested in multiple ways:
 
 - **Local testing**: Run `./test-update-versions.sh` to validate core logic
-- **Dry-run testing**: Use the "Test Update Versions (Dry Run)" workflow in GitHub Actions
 - **Manual trigger**: Use workflow_dispatch to test end-to-end
 
 See [Testing the Update Workflow](testing-update-workflow.md) for detailed testing instructions.
