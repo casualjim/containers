@@ -3,6 +3,8 @@ name: Build and Push Containers
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   schedule:
     - cron: "0 17 * * 3" # Every Wednesday at 5PM UTC
 
@@ -14,10 +16,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Free up disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h
+
       - name: Checkout code
         uses: actions/checkout@v5
 
       - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -30,7 +42,9 @@ jobs:
       - name: Build and push with bake
         uses: docker/bake-action@v6
         with:
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           files: docker-bake.hcl
+          set: |
+            *.platform=${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
         env:
           BUILD_NUMBER: ${{ github.run_number }}

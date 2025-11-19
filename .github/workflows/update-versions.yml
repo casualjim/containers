@@ -1,0 +1,160 @@
+name: Update Rust and Bun Versions
+
+on:
+  schedule:
+    - cron: "0 10 * * *" # Daily at 2 AM PST (10 AM UTC)
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Get latest Rust version
+        id: rust-version
+        run: |
+          LATEST_RUST=$(./scripts/get-rust-version.sh)
+          echo "Latest Rust version: $LATEST_RUST"
+          echo "version=$LATEST_RUST" >> $GITHUB_OUTPUT
+
+      - name: Get latest Bun version
+        id: bun-version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_BUN=$(./scripts/get-bun-version.sh)
+          echo "Latest Bun version: $LATEST_BUN"
+          echo "version=$LATEST_BUN" >> $GITHUB_OUTPUT
+
+      - name: Get current versions from docker-bake.hcl
+        id: current-versions
+        run: |
+          CURRENT_RUST=$(./scripts/get-current-rust-version.sh)
+          CURRENT_BUN=$(./scripts/get-current-bun-version.sh)
+          
+          echo "Current Rust version: $CURRENT_RUST"
+          echo "Current Bun version: $CURRENT_BUN"
+          echo "rust=$CURRENT_RUST" >> $GITHUB_OUTPUT
+          echo "bun=$CURRENT_BUN" >> $GITHUB_OUTPUT
+
+      - name: Check if updates are needed
+        id: check-updates
+        run: |
+          RUST_UPDATE="false"
+          BUN_UPDATE="false"
+          UPDATE_NEEDED="false"
+          
+          if [ "${{ steps.rust-version.outputs.version }}" != "${{ steps.current-versions.outputs.rust }}" ]; then
+            echo "Rust version update needed: ${{ steps.current-versions.outputs.rust }} -> ${{ steps.rust-version.outputs.version }}"
+            RUST_UPDATE="true"
+            UPDATE_NEEDED="true"
+          else
+            echo "Rust version is up to date: ${{ steps.current-versions.outputs.rust }}"
+          fi
+          
+          if [ "${{ steps.bun-version.outputs.version }}" != "${{ steps.current-versions.outputs.bun }}" ]; then
+            echo "Bun version update needed: ${{ steps.current-versions.outputs.bun }} -> ${{ steps.bun-version.outputs.version }}"
+            BUN_UPDATE="true"
+            UPDATE_NEEDED="true"
+          else
+            echo "Bun version is up to date: ${{ steps.current-versions.outputs.bun }}"
+          fi
+          
+          echo "rust_update=$RUST_UPDATE" >> $GITHUB_OUTPUT
+          echo "bun_update=$BUN_UPDATE" >> $GITHUB_OUTPUT
+          echo "update_needed=$UPDATE_NEEDED" >> $GITHUB_OUTPUT
+
+      - name: Update docker-bake.hcl
+        if: steps.check-updates.outputs.update_needed == 'true'
+        run: |
+          if [ "${{ steps.check-updates.outputs.rust_update }}" == "true" ]; then
+            ./scripts/update-rust-version.sh "${{ steps.rust-version.outputs.version }}"
+            echo "Updated RUST_VERSION to ${{ steps.rust-version.outputs.version }}"
+          fi
+          
+          if [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ]; then
+            ./scripts/update-bun-version.sh "${{ steps.bun-version.outputs.version }}"
+            echo "Updated BUN_VERSION to ${{ steps.bun-version.outputs.version }}"
+          fi
+
+      - name: Create or update PR
+        if: steps.check-updates.outputs.update_needed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create update branch
+          BRANCH_NAME="bot/rust-bun-bump"
+          git checkout -b "$BRANCH_NAME" || git checkout "$BRANCH_NAME"
+          
+          # Stage and commit changes
+          git add docker-bake.hcl
+          
+          # Build commit message
+          COMMIT_MSG="chore: update Rust/Bun version in docker-bake.hcl"
+          if [ "${{ steps.check-updates.outputs.rust_update }}" == "true" ] && [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ]; then
+            COMMIT_MSG="chore: update Rust (${{ steps.rust-version.outputs.version }}) and Bun (${{ steps.bun-version.outputs.version }}) in docker-bake.hcl"
+          elif [ "${{ steps.check-updates.outputs.rust_update }}" == "true" ]; then
+            COMMIT_MSG="chore: update Rust to ${{ steps.rust-version.outputs.version }} in docker-bake.hcl"
+          elif [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ]; then
+            COMMIT_MSG="chore: update Bun to ${{ steps.bun-version.outputs.version }} in docker-bake.hcl"
+          fi
+          
+          git commit -m "$COMMIT_MSG"
+          
+          # Push the branch
+          git push -f origin "$BRANCH_NAME"
+          
+          # Build PR body
+          PR_BODY="Automated update of Rust and/or Bun versions in \`docker-bake.hcl\`."
+          PR_BODY="$PR_BODY\n\n## Changes"
+          
+          if [ "${{ steps.check-updates.outputs.rust_update }}" == "true" ]; then
+            PR_BODY="$PR_BODY\n- Rust: \`${{ steps.current-versions.outputs.rust }}\` → \`${{ steps.rust-version.outputs.version }}\`"
+          fi
+          
+          if [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ]; then
+            PR_BODY="$PR_BODY\n- Bun: \`${{ steps.current-versions.outputs.bun }}\` → \`${{ steps.bun-version.outputs.version }}\`"
+          fi
+          
+          PR_BODY="$PR_BODY\n\n## CI Verification"
+          PR_BODY="$PR_BODY\nThis PR will be automatically merged once all CI checks pass."
+          PR_BODY="$PR_BODY\n\n---\n*This PR was automatically created by the [update-versions workflow](https://github.com/${{ github.repository }}/actions/workflows/update-versions.yml)*"
+          
+          # Create or update PR
+          PR_TITLE="chore: update Rust/Bun versions in docker-bake.hcl"
+          
+          # Check if PR already exists
+          EXISTING_PR=$(gh pr list --state open --head "$BRANCH_NAME" --json number --jq '.[0].number')
+          
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Updating existing PR #$EXISTING_PR"
+            echo -e "$PR_BODY" | gh pr edit "$EXISTING_PR" --title "$PR_TITLE" --body-file -
+          else
+            echo "Creating new PR"
+            echo -e "$PR_BODY" | gh pr create \
+              --title "$PR_TITLE" \
+              --body-file - \
+              --base main \
+              --head "$BRANCH_NAME"
+            
+            # Get the PR number for the newly created PR
+            EXISTING_PR=$(gh pr list --state open --head "$BRANCH_NAME" --json number --jq '.[0].number')
+          fi
+          
+          # Enable auto-merge for the PR
+          if [ -n "$EXISTING_PR" ]; then
+            echo "Enabling auto-merge for PR #$EXISTING_PR"
+            gh pr merge "$EXISTING_PR" --auto --squash
+          fi
