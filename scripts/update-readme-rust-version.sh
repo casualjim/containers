@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Update Rust version in README.md
+set -euo pipefail
+
+NEW_VERSION="$1"
+FILE="${2:-README.md}"
+
+if [ -z "$NEW_VERSION" ]; then
+  echo "Error: Version argument required" >&2
+  exit 1
+fi
+
+# Update Rust Version in the rust-builder section
+sed -i 's/^\(- \*\*Rust Version\*\*: \)[0-9.]\+$/\1'"$NEW_VERSION"'/g' "$FILE"

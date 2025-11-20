@@ -85,6 +85,19 @@ jobs:
             echo "Updated BUN_VERSION to ${{ steps.bun-version.outputs.version }}"
           fi
 
+      - name: Update README.md
+        if: steps.check-updates.outputs.update_needed == 'true'
+        run: |
+          if [ "${{ steps.check-updates.outputs.rust_update }}" == "true" ]; then
+            ./scripts/update-readme-rust-version.sh "${{ steps.rust-version.outputs.version }}"
+            echo "Updated Rust version in README.md to ${{ steps.rust-version.outputs.version }}"
+          fi
+          
+          if [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ]; then
+            ./scripts/update-readme-bun-version.sh "${{ steps.bun-version.outputs.version }}"
+            echo "Updated Bun version in README.md to ${{ steps.bun-version.outputs.version }}"
+          fi
+
       - name: Create or update PR
         if: steps.check-updates.outputs.update_needed == 'true'
         env:
@@ -99,16 +112,16 @@ jobs:
           git checkout -b "$BRANCH_NAME" || git checkout "$BRANCH_NAME"
           
           # Stage and commit changes
-          git add docker-bake.hcl
+          git add docker-bake.hcl README.md
           
           # Build commit message
-          COMMIT_MSG="chore: update Rust/Bun version in docker-bake.hcl"
+          COMMIT_MSG="chore: update Rust/Bun version in docker-bake.hcl and README.md"
           if [ "${{ steps.check-updates.outputs.rust_update }}" == "true" ] && [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ]; then
-            COMMIT_MSG="chore: update Rust (${{ steps.rust-version.outputs.version }}) and Bun (${{ steps.bun-version.outputs.version }}) in docker-bake.hcl"
+            COMMIT_MSG="chore: update Rust (${{ steps.rust-version.outputs.version }}) and Bun (${{ steps.bun-version.outputs.version }}) in docker-bake.hcl and README.md"
           elif [ "${{ steps.check-updates.outputs.rust_update }}" == "true" ]; then
-            COMMIT_MSG="chore: update Rust to ${{ steps.rust-version.outputs.version }} in docker-bake.hcl"
+            COMMIT_MSG="chore: update Rust to ${{ steps.rust-version.outputs.version }} in docker-bake.hcl and README.md"
           elif [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ]; then
-            COMMIT_MSG="chore: update Bun to ${{ steps.bun-version.outputs.version }} in docker-bake.hcl"
+            COMMIT_MSG="chore: update Bun to ${{ steps.bun-version.outputs.version }} in docker-bake.hcl and README.md"
           fi
           
           git commit -m "$COMMIT_MSG"
@@ -117,7 +130,7 @@ jobs:
           git push -f origin "$BRANCH_NAME"
           
           # Build PR body
-          PR_BODY="Automated update of Rust and/or Bun versions in \`docker-bake.hcl\`."
+          PR_BODY="Automated update of Rust and/or Bun versions in \`docker-bake.hcl\` and \`README.md\`."
           PR_BODY="$PR_BODY\n\n## Changes"
           
           if [ "${{ steps.check-updates.outputs.rust_update }}" == "true" ]; then
@@ -133,7 +146,7 @@ jobs:
           PR_BODY="$PR_BODY\n\n---\n*This PR was automatically created by the [update-versions workflow](https://github.com/${{ github.repository }}/actions/workflows/update-versions.yml)*"
           
           # Create or update PR
-          PR_TITLE="chore: update Rust/Bun versions in docker-bake.hcl"
+          PR_TITLE="chore: update Rust/Bun versions in docker-bake.hcl and README.md"
           
           # Check if PR already exists
           EXISTING_PR=$(gh pr list --state open --head "$BRANCH_NAME" --json number --jq '.[0].number')
