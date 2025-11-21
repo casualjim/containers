@@ -3,5 +3,6 @@
 set -euo pipefail
 
 curl -s https://static.rust-lang.org/dist/channel-rust-stable.toml | \
-  awk '/^\[pkg\.rust\]$/,/^version = / {if (/^version = /) {print; exit}}' | \
+  grep -A 20 '^\[pkg\.rust\]$' | \
+  grep -m 1 '^version = ' | \
   sed -E 's/version = "([0-9]+\.[0-9]+\.[0-9]+).*/\1/'
