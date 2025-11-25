@@ -11,11 +11,11 @@ variable "REGISTRY" {
 }
 
 variable "RUST_VERSION" {
-  default = "1.91.0"
+  default = "1.91.1"
 }
 
 variable "BUN_VERSION" {
-  default = "1.3.1"
+  default = "1.3.3"
 }
 
 variable "TAG" {
