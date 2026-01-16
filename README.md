@@ -62,7 +62,7 @@ Bun runtime container with full Node.js compatibility and SSL support.
 - **Base**: Chiseled Ubuntu 25.10
 - **Repository**: `ghcr.io/casualjim/bun:latest`
 - **User**: `appuser` (UID 10001, non-root)
-- **Bun Version**: 1.3.5
+- **Bun Version**: 1.3.6
 - **Extra packages**: `libstdc++6_libs`, `libgcc-s1_libs`, `libssl3t64_libs`, `zlib1g_libs`, `openssl_bins`
 - **Features**:
   - Bun runtime with JavaScript/TypeScript support
@@ -91,7 +91,7 @@ Comprehensive Rust development and build container with LLVM/Clang toolchain.
 - **Repository**: `ghcr.io/casualjim/rust-builder:latest`
 - **User**: `root`
 - **Rust Version**: 1.92.0
-- **Bun Version**: 1.3.5
+- **Bun Version**: 1.3.6
 - **Features**:
   - Rust toolchain with rustup, cargo, and rustc
   - LLVM 21 and Clang 21 compilers
