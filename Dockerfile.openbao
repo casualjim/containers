@@ -13,10 +13,10 @@ FROM docker.io/openbao/openbao:${OPENBAO_VERSION}
 
 USER root
 
-COPY --from=plugin-builder /go/bin/cloudflare /usr/local/libexec/openbao/vault-plugin-secrets-cloudflare
+COPY --from=plugin-builder /go/bin/cloudflare /openbao/plugins/vault-plugin-secrets-cloudflare
 
-RUN mkdir -p /openbao/plugins && \
-    chown -R openbao:openbao /openbao/plugins /usr/local/libexec/openbao
+RUN chmod +x /openbao/plugins/vault-plugin-secrets-cloudflare && \
+    chown -R openbao:openbao /openbao/plugins
 
 USER openbao
 
