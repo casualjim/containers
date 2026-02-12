@@ -1,0 +1,23 @@
+ARG OPENBAO_VERSION=2.5.0
+ARG PLUGIN_VERSION=0.1.4
+
+FROM golang:alpine AS plugin-builder
+
+ARG PLUGIN_VERSION
+ARG TARGETARCH
+ARG TARGETOS
+
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go install -ldflags="-s -w" github.com/bloominlabs/vault-plugin-secrets-cloudflare/cmd/cloudflare@v${PLUGIN_VERSION}
+
+FROM docker.io/openbao/openbao:${OPENBAO_VERSION}
+
+USER root
+
+COPY --from=plugin-builder /go/bin/cloudflare /usr/local/libexec/openbao/vault-plugin-secrets-cloudflare
+
+RUN mkdir -p /openbao/plugins && \
+    chown -R openbao:openbao /openbao/plugins /usr/local/libexec/openbao
+
+USER openbao
+
+ENTRYPOINT ["openbao"]

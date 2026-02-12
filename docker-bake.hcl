@@ -34,6 +34,14 @@ variable "REDIS_VERSION" {
   default = "8.4.0"
 }
 
+variable "OPENBAO_VERSION" {
+  default = "2.5.0"
+}
+
+variable "OPENBAO_CLOUDFLARE_PLUGIN_VERSION" {
+  default = "0.1.4"
+}
+
 
 # Common configuration for all chisel-based images
 target "chisel-common" {
@@ -207,8 +215,23 @@ target "falkordb" {
   ]
 }
 
+target "openbao" {
+  dockerfile = "Dockerfile.openbao"
+  context    = "."
+  platforms  = ["linux/amd64", "linux/arm64"]
+  args = {
+    OPENBAO_VERSION  = OPENBAO_VERSION
+    PLUGIN_VERSION   = OPENBAO_CLOUDFLARE_PLUGIN_VERSION
+  }
+  tags = [
+    "${REGISTRY}/openbao:${OPENBAO_VERSION}",
+    "${REGISTRY}/openbao:${OPENBAO_VERSION}-${BUILD_NUMBER}",
+    "${REGISTRY}/openbao:latest",
+  ]
+}
+
 
 # Group to build all images
 group "default" {
-  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "sqlx-cli", "bun", "rustbuilder", "falkordb"]
+  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "sqlx-cli", "bun", "rustbuilder", "falkordb", "openbao"]
 }
