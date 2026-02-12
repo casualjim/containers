@@ -11,13 +11,5 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go install -ldflags="-s 
 
 FROM docker.io/openbao/openbao:${OPENBAO_VERSION}
 
-USER root
-
 COPY --from=plugin-builder /go/bin/cloudflare /openbao/plugins/vault-plugin-secrets-cloudflare
 
-RUN chmod +x /openbao/plugins/vault-plugin-secrets-cloudflare && \
-    chown -R openbao:openbao /openbao/plugins
-
-USER openbao
-
-ENTRYPOINT ["openbao"]
