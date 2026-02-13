@@ -1,0 +1,89 @@
+ARG UBUNTU_RELEASE=25.10
+ARG UMBER_VERSION=v0.5.0
+
+# Stage 1: Download umber binary
+FROM ubuntu:${UBUNTU_RELEASE} AS umber-downloader
+
+ARG TARGETARCH
+ARG UMBER_VERSION
+
+RUN apt-get update -yq && \
+    apt-get install -yqq --no-install-recommends ca-certificates curl xz-utils && \
+    rm -rf /var/lib/apt/lists/*
+
+# Map docker TARGETARCH to umber's target triple
+RUN case "$TARGETARCH" in \
+    amd64) UMBER_ARCH="x86_64-unknown-linux-gnu" ;; \
+    arm64) UMBER_ARCH="aarch64-unknown-linux-gnu" ;; \
+    *) echo "Unsupported architecture: $TARGETARCH"; exit 1 ;; \
+    esac && \
+    curl -fsSL "https://github.com/casualjim/umber/releases/download/${UMBER_VERSION}/umber-${UMBER_ARCH}.tar.xz" -o /tmp/umber.tar.xz && \
+    tar -xf /tmp/umber.tar.xz -C /tmp && \
+    mv /tmp/umber-${UMBER_ARCH}/umber /usr/local/bin/umber && \
+    chmod +x /usr/local/bin/umber
+
+# Stage 2: Final netdebug image
+FROM ubuntu:${UBUNTU_RELEASE}
+
+ARG TARGETARCH
+ARG UBUNTU_RELEASE
+
+# Avoid interactive prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Copy umber from downloader stage
+COPY --from=umber-downloader /usr/local/bin/umber /usr/local/bin/umber
+
+# Install network debugging and troubleshooting tools
+RUN apt-get update -yq && \
+    apt-get install -yqq --no-install-recommends \
+    # Original requested packages
+    gzip \
+    ngrep \
+    dnsutils \
+    netcat-traditional \
+    socat \
+    arping \
+    telnet \
+    iputils-ping \
+    iputils-tracepath \
+    tcpdump \
+    redis-tools \
+    postgresql-client \
+    iproute2 \
+    net-tools \
+    inetutils-traceroute \
+    # Additional CLI tools
+    jq \
+    ripgrep \
+    eza \
+    # Additional network tools
+    curl \
+    ca-certificates \
+    mtr-tiny \
+    nmap \
+    iperf3 \
+    iftop \
+    nethogs \
+    conntrack \
+    ethtool \
+    bridge-utils \
+    traceroute \
+    whois \
+    # Shell and init
+    bash \
+    tini \
+    && apt-get clean -y \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+# Set bash as default shell
+SHELL ["/bin/bash", "-c"]
+ENV SHELL=/bin/bash
+
+WORKDIR /root
+
+# Use tini for proper zombie reaping
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
+# Default to bash for interactive debugging
+CMD ["/bin/bash"]

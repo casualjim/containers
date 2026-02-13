@@ -38,6 +38,10 @@ variable "LADYBUG_VERSION" {
   default = "v0.14.1"
 }
 
+variable "UMBER_VERSION" {
+  default = "v0.5.0"
+}
+
 
 # Common configuration for all chisel-based images
 target "chisel-common" {
@@ -247,8 +251,31 @@ target "openbao" {
   ]
 }
 
+# netdebug: Network debugging and troubleshooting toolkit
+# Includes: tcpdump, ngrep, nmap, curl, postgresql-client, redis-tools, jq, ripgrep, eza, umber and more
+# Designed for debugging network issues in containerized environments
+# Runs as root for full network interface access
+# Note: This image is larger than chisel-based images due to full Ubuntu base
+#       and comprehensive tooling - it's meant for debugging, not production deployment
+# Size: ~300-500MB (varies by architecture)
+target "netdebug" {
+  dockerfile = "Dockerfile.netdebug"
+  context    = "."
+  platforms  = ["linux/amd64", "linux/arm64"]
+  args = {
+    UBUNTU_RELEASE = UBUNTU_RELEASE
+    UMBER_VERSION  = UMBER_VERSION
+  }
+  tags = [
+    "${REGISTRY}/netdebug:${TAG}",
+    "${REGISTRY}/netdebug:${UBUNTU_RELEASE}",
+    "${REGISTRY}/netdebug:${UBUNTU_RELEASE}-${BUILD_NUMBER}",
+  ]
+}
+
 
 # Group to build all images
 group "default" {
-  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "rustbuilder", "openbao"]
+  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "rustbuilder", "openbao", "netdebug"]
 }
+

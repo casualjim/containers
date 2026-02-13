@@ -133,6 +133,25 @@ Comprehensive Rust development and build container with LLVM/Clang toolchain.
   - OpenSSL development libraries
   - Ladybug graph database (library + CLI + headers)
 
+### netdebug
+Network debugging and troubleshooting toolkit for containerized environments.
+
+- **Base**: Ubuntu 25.10 (full, not chiseled)
+- **Repository**: `ghcr.io/casualjim/netdebug:latest`
+- **User**: `root` (for full network interface access)
+- **Size**: ~300-500MB
+- **Included Tools**:
+  - **Packet capture/analysis**: tcpdump, ngrep
+  - **Connectivity testing**: ping, traceroute, mtr, netcat, socat, arping, telnet
+  - **DNS tools**: dig, nslookup, host, dnsutils
+  - **Database clients**: postgresql-client (psql), redis-tools (redis-cli)
+  - **HTTP/SSL**: curl, openssl, ca-certificates
+  - **Network monitoring/scanning**: nmap, iperf3, iftop, nethogs, conntrack, ethtool, bridge-utils
+  - **Legacy tools**: net-tools (netstat, ifconfig), inetutils-traceroute
+  - **Modern CLI tools**: umber (log viewer), jq, ripgrep, eza
+  - **Core**: bash, tini (init), gzip
+- **Use Case**: Debugging network issues, inspecting traffic, testing connectivity in Kubernetes/Docker environments
+
 ## Building Images
 
 Build all images:
@@ -151,6 +170,7 @@ docker buildx bake lbug-cli
 docker buildx bake bun
 docker buildx bake sqlx-cli
 docker buildx bake rustbuilder
+docker buildx bake netdebug
 ```
 
 Build with custom variables:
