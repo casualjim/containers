@@ -1,3 +1,4 @@
 [tools]
+docker-cli = "latest"
 jq = "latest"
 yq = "latest"

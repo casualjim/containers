@@ -42,6 +42,10 @@ variable "OPENBAO_CLOUDFLARE_PLUGIN_VERSION" {
   default = "0.1.4"
 }
 
+variable "LADYBUG_VERSION" {
+  default = "v0.14.1"
+}
+
 
 # Common configuration for all chisel-based images
 target "chisel-common" {
@@ -140,6 +144,38 @@ target "libcxx-ssl-tesseract" {
   ]
 }
 
+# libcxx-ssl-ladybug: libcxx-ssl image with Ladybug graph database shared library
+target "libcxx-ssl-ladybug" {
+  inherits = ["chisel-common"]
+  context  = "."
+  args = {
+    EXTRA_PACKAGES      = "libstdc++6_libs libc++1_libs libssl3t64_libs openssl_bins"
+    POST_INSTALL_SCRIPT = "install-libcxx-ladybug.sh"
+    LADYBUG_VERSION     = LADYBUG_VERSION
+  }
+  tags = [
+    "${REGISTRY}/bare:libcxx-ssl-ladybug",
+    "${REGISTRY}/bare:libcxx-ssl-ladybug-${UBUNTU_RELEASE}",
+    "${REGISTRY}/bare:libcxx-ssl-ladybug-${UBUNTU_RELEASE}-${BUILD_NUMBER}",
+  ]
+}
+
+# lbug-cli: Ladybug CLI container with common tools
+target "lbug-cli" {
+  inherits = ["chisel-common"]
+  context  = "."
+  args = {
+    EXTRA_PACKAGES      = "libstdc++6_libs libc++1_libs libssl3t64_libs openssl_bins bash_bins coreutils_bins curl_bins jq_bins"
+    POST_INSTALL_SCRIPT = "install-libcxx-ladybug-cli.sh"
+    LADYBUG_VERSION     = LADYBUG_VERSION
+  }
+  tags = [
+    "${REGISTRY}/lbug-cli:${TAG}",
+    "${REGISTRY}/lbug-cli:${LADYBUG_VERSION}",
+    "${REGISTRY}/lbug-cli:${LADYBUG_VERSION}-${BUILD_NUMBER}",
+  ]
+}
+
 # bun-builder: Internal target that builds the chisel rootfs with Bun
 # This is not pushed as a final image, just used as a build stage
 target "bun-builder" {
@@ -200,6 +236,7 @@ target "rustbuilder" {
     UBUNTU_RELEASE = "24.04"
     RUST_VERSION = RUST_VERSION
     BUN_VERSION = BUN_VERSION
+    LADYBUG_VERSION = LADYBUG_VERSION
   }
 }
 
@@ -233,5 +270,5 @@ target "openbao" {
 
 # Group to build all images
 group "default" {
-  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "sqlx-cli", "bun", "rustbuilder", "falkordb", "openbao"]
+  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "rustbuilder", "falkordb", "openbao"]
 }

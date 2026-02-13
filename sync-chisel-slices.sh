@@ -16,6 +16,9 @@ REQUIRED_PACKAGES=(
   "base-files"
   "base-passwd"
   "ca-certificates"
+  "coreutils"
+  "curl"
+  "jq"
   "tzdata"
   "media-types"
   
@@ -40,9 +43,10 @@ REQUIRED_PACKAGES=(
   
   # Other common dependencies
   "libffi8"
-  "libxml2"
+  "libxml2-16"
   "libzstd1"
   "zlib1g"
+  
 )
 
 # Custom packages we maintain locally
