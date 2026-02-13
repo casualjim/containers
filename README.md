@@ -232,7 +232,7 @@ tar -xzf chisel_v1.2.0_linux_amd64.tar.gz
 
 ## Workflow
 
-The GitHub Actions workflow (`.github/workflows/build.yml`) builds and pushes images:
+The Forgejo Actions workflow (`.forgejo/workflows/build.yml`) builds and pushes images:
 - On push to the `main` branch
 - Every Wednesday at 5PM UTC
 

@@ -1,0 +1,45 @@
+name: Sync Chisel Slices
+
+on:
+  schedule:
+    - cron: "0 12 * * 3" # Every Wednesday at 12PM UTC (before build at 5PM)
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Install prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yq
+
+      - name: Sync chisel slices from upstream
+        run: ./sync-chisel-slices.sh
+
+      - name: Check for chisel slice changes
+        id: chisel-changes
+        run: |
+          if [[ -n $(git status --porcelain chisel-releases/) ]]; then
+            echo "changes=true" >> $GITHUB_OUTPUT
+            echo "Chisel slices have been updated"
+            git status chisel-releases/
+          else
+            echo "changes=false" >> $GITHUB_OUTPUT
+            echo "No changes to chisel slices"
+          fi
+
+      - name: Commit and push chisel slice updates
+        if: steps.chisel-changes.outputs.changes == 'true'
+        run: |
+          git config user.name "forgejo-actions[bot]"
+          git config user.email "forgejo-actions[bot]@noreply.wagyu.icu"
+          git add chisel-releases/
+          git commit -m "sync chisel slices from upstream"
+          git push

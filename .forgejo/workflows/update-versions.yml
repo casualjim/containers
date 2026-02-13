@@ -1,0 +1,217 @@
+name: Update Versions
+
+on:
+  schedule:
+    - cron: "0 10 * * *" # Daily at 2 AM PST (10 AM UTC)
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Get latest Rust version
+        id: rust-version
+        run: |
+          LATEST_RUST=$(./scripts/get-rust-version.sh)
+          echo "Latest Rust version: $LATEST_RUST"
+          echo "version=$LATEST_RUST" >> $GITHUB_OUTPUT
+
+      - name: Get latest Bun version
+        id: bun-version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_BUN=$(./scripts/get-bun-version.sh)
+          echo "Latest Bun version: $LATEST_BUN"
+          echo "version=$LATEST_BUN" >> $GITHUB_OUTPUT
+
+      - name: Get latest OpenBao version
+        id: openbao-version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_OPENBAO=$(./scripts/get-openbao-version.sh)
+          echo "Latest OpenBao version: $LATEST_OPENBAO"
+          echo "version=$LATEST_OPENBAO" >> $GITHUB_OUTPUT
+
+      - name: Get latest Cloudflare plugin version
+        id: cloudflare-plugin-version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_PLUGIN=$(./scripts/get-cloudflare-plugin-version.sh)
+          echo "Latest Cloudflare plugin version: $LATEST_PLUGIN"
+          echo "version=$LATEST_PLUGIN" >> $GITHUB_OUTPUT
+
+      - name: Get current versions from docker-bake.hcl
+        id: current-versions
+        run: |
+          CURRENT_RUST=$(./scripts/get-current-rust-version.sh)
+          CURRENT_BUN=$(./scripts/get-current-bun-version.sh)
+          CURRENT_OPENBAO=$(./scripts/get-current-openbao-version.sh)
+          CURRENT_PLUGIN=$(./scripts/get-current-cloudflare-plugin-version.sh)
+          
+          echo "Current Rust version: $CURRENT_RUST"
+          echo "Current Bun version: $CURRENT_BUN"
+          echo "Current OpenBao version: $CURRENT_OPENBAO"
+          echo "Current Cloudflare plugin version: $CURRENT_PLUGIN"
+          echo "rust=$CURRENT_RUST" >> $GITHUB_OUTPUT
+          echo "bun=$CURRENT_BUN" >> $GITHUB_OUTPUT
+          echo "openbao=$CURRENT_OPENBAO" >> $GITHUB_OUTPUT
+          echo "plugin=$CURRENT_PLUGIN" >> $GITHUB_OUTPUT
+
+      - name: Check if updates are needed
+        id: check-updates
+        run: |
+          RUST_UPDATE="false"
+          BUN_UPDATE="false"
+          OPENBAO_UPDATE="false"
+          PLUGIN_UPDATE="false"
+          UPDATE_NEEDED="false"
+          
+          if [ "${{ steps.rust-version.outputs.version }}" != "${{ steps.current-versions.outputs.rust }}" ]; then
+            echo "Rust version update needed: ${{ steps.current-versions.outputs.rust }} -> ${{ steps.rust-version.outputs.version }}"
+            RUST_UPDATE="true"
+            UPDATE_NEEDED="true"
+          else
+            echo "Rust version is up to date: ${{ steps.current-versions.outputs.rust }}"
+          fi
+          
+          if [ "${{ steps.bun-version.outputs.version }}" != "${{ steps.current-versions.outputs.bun }}" ]; then
+            echo "Bun version update needed: ${{ steps.current-versions.outputs.bun }} -> ${{ steps.bun-version.outputs.version }}"
+            BUN_UPDATE="true"
+            UPDATE_NEEDED="true"
+          else
+            echo "Bun version is up to date: ${{ steps.current-versions.outputs.bun }}"
+          fi
+          
+          if [ "${{ steps.openbao-version.outputs.version }}" != "${{ steps.current-versions.outputs.openbao }}" ]; then
+            echo "OpenBao version update needed: ${{ steps.current-versions.outputs.openbao }} -> ${{ steps.openbao-version.outputs.version }}"
+            OPENBAO_UPDATE="true"
+            UPDATE_NEEDED="true"
+          else
+            echo "OpenBao version is up to date: ${{ steps.current-versions.outputs.openbao }}"
+          fi
+          
+          if [ "${{ steps.cloudflare-plugin-version.outputs.version }}" != "${{ steps.current-versions.outputs.plugin }}" ]; then
+            echo "Cloudflare plugin version update needed: ${{ steps.current-versions.outputs.plugin }} -> ${{ steps.cloudflare-plugin-version.outputs.version }}"
+            PLUGIN_UPDATE="true"
+            UPDATE_NEEDED="true"
+          else
+            echo "Cloudflare plugin version is up to date: ${{ steps.current-versions.outputs.plugin }}"
+          fi
+          
+          echo "rust_update=$RUST_UPDATE" >> $GITHUB_OUTPUT
+          echo "bun_update=$BUN_UPDATE" >> $GITHUB_OUTPUT
+          echo "openbao_update=$OPENBAO_UPDATE" >> $GITHUB_OUTPUT
+          echo "plugin_update=$PLUGIN_UPDATE" >> $GITHUB_OUTPUT
+          echo "update_needed=$UPDATE_NEEDED" >> $GITHUB_OUTPUT
+
+      - name: Update docker-bake.hcl
+        if: steps.check-updates.outputs.update_needed == 'true'
+        run: |
+          if [ "${{ steps.check-updates.outputs.rust_update }}" == "true" ]; then
+            ./scripts/update-rust-version.sh "${{ steps.rust-version.outputs.version }}"
+            echo "Updated RUST_VERSION to ${{ steps.rust-version.outputs.version }}"
+          fi
+          
+          if [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ]; then
+            ./scripts/update-bun-version.sh "${{ steps.bun-version.outputs.version }}"
+            echo "Updated BUN_VERSION to ${{ steps.bun-version.outputs.version }}"
+          fi
+          
+          if [ "${{ steps.check-updates.outputs.openbao_update }}" == "true" ]; then
+            ./scripts/update-openbao-version.sh "${{ steps.openbao-version.outputs.version }}"
+            echo "Updated OPENBAO_VERSION to ${{ steps.openbao-version.outputs.version }}"
+          fi
+          
+          if [ "${{ steps.check-updates.outputs.plugin_update }}" == "true" ]; then
+            ./scripts/update-cloudflare-plugin-version.sh "${{ steps.cloudflare-plugin-version.outputs.version }}"
+            echo "Updated OPENBAO_CLOUDFLARE_PLUGIN_VERSION to ${{ steps.cloudflare-plugin-version.outputs.version }}"
+          fi
+
+      - name: Update README.md
+        if: steps.check-updates.outputs.update_needed == 'true'
+        run: |
+          if [ "${{ steps.check-updates.outputs.rust_update }}" == "true" ]; then
+            ./scripts/update-readme-rust-version.sh "${{ steps.rust-version.outputs.version }}"
+            echo "Updated Rust version in README.md to ${{ steps.rust-version.outputs.version }}"
+          fi
+          
+          if [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ]; then
+            ./scripts/update-readme-bun-version.sh "${{ steps.bun-version.outputs.version }}"
+            echo "Updated Bun version in README.md to ${{ steps.bun-version.outputs.version }}"
+          fi
+
+      - name: Create or update PR
+        if: steps.check-updates.outputs.update_needed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "forgejo-actions[bot]"
+          git config user.email "forgejo-actions[bot]@noreply.wagyu.icu"
+
+          BRANCH_NAME="bot/version-bump"
+          git checkout -b "$BRANCH_NAME" || git checkout "$BRANCH_NAME"
+
+          git add docker-bake.hcl README.md
+
+          UPDATES=()
+          [ "${{ steps.check-updates.outputs.rust_update }}" == "true" ] && UPDATES+=("Rust ${{ steps.rust-version.outputs.version }}")
+          [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ] && UPDATES+=("Bun ${{ steps.bun-version.outputs.version }}")
+          [ "${{ steps.check-updates.outputs.openbao_update }}" == "true" ] && UPDATES+=("OpenBao ${{ steps.openbao-version.outputs.version }}")
+          [ "${{ steps.check-updates.outputs.plugin_update }}" == "true" ] && UPDATES+=("Cloudflare plugin ${{ steps.cloudflare-plugin-version.outputs.version }}")
+
+          COMMIT_MSG="chore: update ${UPDATES[*]}"
+          git commit -m "$COMMIT_MSG"
+          git push -f origin "$BRANCH_NAME"
+
+          PR_BODY="Automated version update.\n\n## Changes"
+          [ "${{ steps.check-updates.outputs.rust_update }}" == "true" ] && PR_BODY="$PR_BODY\n- Rust: \`${{ steps.current-versions.outputs.rust }}\` → \`${{ steps.rust-version.outputs.version }}\`"
+          [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ] && PR_BODY="$PR_BODY\n- Bun: \`${{ steps.current-versions.outputs.bun }}\` → \`${{ steps.bun-version.outputs.version }}\`"
+          [ "${{ steps.check-updates.outputs.openbao_update }}" == "true" ] && PR_BODY="$PR_BODY\n- OpenBao: \`${{ steps.current-versions.outputs.openbao }}\` → \`${{ steps.openbao-version.outputs.version }}\`"
+          [ "${{ steps.check-updates.outputs.plugin_update }}" == "true" ] && PR_BODY="$PR_BODY\n- Cloudflare plugin: \`${{ steps.current-versions.outputs.plugin }}\` → \`${{ steps.cloudflare-plugin-version.outputs.version }}\`"
+          PR_BODY="$PR_BODY\n\n---\n*Auto-generated by update-versions workflow*"
+
+          PR_TITLE="chore: update ${UPDATES[*]}"
+
+          # Use Forgejo API to create/update PR
+          API_URL="${{ github.api_url }}"
+          REPO="${{ github.repository }}"
+
+          # Check for existing PR
+          EXISTING_PR=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "$API_URL/repos/$REPO/pulls?state=open&head=$BRANCH_NAME" | jq -r '.[0].number // empty')
+
+          if [ -n "$EXISTING_PR" ]; then
+            # Update existing PR
+            curl -s -X PATCH -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"title\":\"$PR_TITLE\",\"body\":\"$(echo -e "$PR_BODY")\"}" \
+              "$API_URL/repos/$REPO/pulls/$EXISTING_PR"
+          else
+            # Create new PR
+            curl -s -X POST -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"title\":\"$PR_TITLE\",\"body\":\"$(echo -e "$PR_BODY\")\",\"head\":\"$BRANCH_NAME\",\"base\":\"main\"}" \
+              "$API_URL/repos/$REPO/pulls"
+            EXISTING_PR=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+              "$API_URL/repos/$REPO/pulls?state=open&head=$BRANCH_NAME" | jq -r '.[0].number // empty')
+          fi
+
+          if [ -n "$EXISTING_PR" ]; then
+            # Schedule auto-merge with squash (Forgejo API)
+            curl -s -X POST -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d '{"merge_method":"squash"}' \
+              "$API_URL/repos/$REPO/pulls/$EXISTING_PR/auto_merge"
+          fi
