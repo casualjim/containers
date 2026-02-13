@@ -31,7 +31,7 @@ variable "OPENBAO_VERSION" {
 }
 
 variable "OPENBAO_CLOUDFLARE_PLUGIN_VERSION" {
-  default = "0.1.4"
+  default = "0.2.0"
 }
 
 variable "LADYBUG_VERSION" {
