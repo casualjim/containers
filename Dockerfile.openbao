@@ -8,7 +8,7 @@ ARG PLUGIN_VERSION
 ARG TARGETARCH
 ARG TARGETOS
 
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go install -ldflags="-s -w" github.com/bloominlabs/vault-plugin-secrets-cloudflare/cmd/cloudflare@v${PLUGIN_VERSION}
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go install -ldflags="-s -w" git.wagyu.icu/casualjim/vault-plugin-secrets-cloudflare/cmd/cloudflare@v${PLUGIN_VERSION}
 
 RUN sha256sum /go/bin/cloudflare | cut -d' ' -f1 > /go/bin/cloudflare.sha256
 
