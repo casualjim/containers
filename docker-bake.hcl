@@ -26,6 +26,10 @@ variable "BUILD_NUMBER" {
   default = "local"
 }
 
+variable "OPENBAO_VERSION" {
+  default = "2.5.0"
+}
+
 variable "OPENBAO_CLOUDFLARE_PLUGIN_VERSION" {
   default = "0.1.4"
 }
