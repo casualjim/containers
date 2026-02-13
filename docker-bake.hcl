@@ -26,18 +26,6 @@ variable "BUILD_NUMBER" {
   default = "local"
 }
 
-variable "FALKORDB_VERSION" {
-  default = "v4.16.0"
-}
-
-variable "REDIS_VERSION" {
-  default = "8.4.0"
-}
-
-variable "OPENBAO_VERSION" {
-  default = "2.5.0"
-}
-
 variable "OPENBAO_CLOUDFLARE_PLUGIN_VERSION" {
   default = "0.1.4"
 }
@@ -240,18 +228,6 @@ target "rustbuilder" {
   }
 }
 
-# falkordb: FalkorDB with Redis
-target "falkordb" {
-  dockerfile = "Dockerfile"
-  context    = "./falkordb-ot"
-  platforms  = ["linux/amd64"]
-  tags = [
-    "${REGISTRY}/falkordb:${FALKORDB_VERSION}-${REDIS_VERSION}",
-    "${REGISTRY}/falkordb:${FALKORDB_VERSION}-${REDIS_VERSION}-${BUILD_NUMBER}",
-    "${REGISTRY}/falkordb:latest",
-  ]
-}
-
 target "openbao" {
   dockerfile = "Dockerfile.openbao"
   context    = "."
@@ -270,5 +246,5 @@ target "openbao" {
 
 # Group to build all images
 group "default" {
-  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "rustbuilder", "falkordb", "openbao"]
+  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "rustbuilder", "openbao"]
 }
