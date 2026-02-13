@@ -14,17 +14,11 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on:
+      - docker
+      - linux
+      - amd64
     steps:
-      - name: Free up disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          sudo docker image prune --all --force
-          df -h
-
       - name: Checkout code
         uses: actions/checkout@v5
 
@@ -51,20 +45,11 @@ jobs:
           BUILD_NUMBER: ${{ github.run_number }}
 
   build-openbao:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        platform: [amd64]
+    runs-on:
+      - docker
+      - linux
+      - amd64
     steps:
-      - name: Free up disk space
-        run: |
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf /usr/local/lib/android
-          sudo rm -rf /opt/ghc
-          sudo rm -rf /opt/hostedtoolcache/CodeQL
-          sudo docker image prune --all --force
-          df -h
-
       - name: Checkout code
         uses: actions/checkout@v5
 
@@ -86,7 +71,7 @@ jobs:
           files: docker-bake.hcl
           targets: openbao
           set: |
-            *.platform=linux/${{ matrix.platform }}
+            *.platform=linux/amd64
             *.output=type=local,dest=/tmp/openbao-build
         env:
           BUILD_NUMBER: ${{ github.run_number }}
@@ -98,14 +83,14 @@ jobs:
           echo "sha256=${SHA}" >> $GITHUB_OUTPUT
           echo "Plugin SHA256: ${SHA}"
 
-      - name: Build and push openbao for ${{ matrix.platform }}
+      - name: Build and push openbao
         uses: docker/bake-action@v6
         with:
           push: ${{ github.event_name != 'pull_request' }}
           files: docker-bake.hcl
           targets: openbao
           set: |
-            *.platform=linux/${{ matrix.platform }}
+            *.platform=linux/amd64
             openbao.args.PLUGIN_SHA256=${{ steps.get-sha.outputs.sha256 }}
         env:
           BUILD_NUMBER: ${{ github.run_number }}
