@@ -56,6 +56,33 @@ Base image with LLVM C++ standard library, OpenSSL 3, and Tesseract OCR with all
   - OpenSSL 3 support
   - Bash shell for scripting
 
+### libcxx-ssl-ladybug
+Base image with LLVM C++ standard library, OpenSSL 3, and Ladybug graph database shared library.
+
+- **Base**: Chiseled Ubuntu 25.10
+- **Repository**: `ghcr.io/casualjim/bare:libcxx-ssl-ladybug`
+- **User**: `appuser` (UID 10001, non-root)
+- **Ladybug Version**: v0.14.1
+- **Extra packages**: `libstdc++6_libs`, `libc++1_libs`, `libssl3t64_libs`, `openssl_bins`
+- **Features**:
+  - Ladybug embedded graph database shared library (`/usr/lib/liblbug.so`)
+  - C/C++ headers (`/usr/include/lbug.h`, `/usr/include/lbug.hpp`)
+  - OpenSSL 3 support
+
+### lbug-cli
+Ladybug CLI container with common tools for database management.
+
+- **Base**: Chiseled Ubuntu 25.10
+- **Repository**: `ghcr.io/casualjim/lbug-cli:latest`
+- **User**: `appuser` (UID 10001, non-root)
+- **Ladybug Version**: v0.14.1
+- **Extra packages**: `libstdc++6_libs`, `libc++1_libs`, `libssl3t64_libs`, `openssl_bins`, `bash_bins`, `coreutils_bins`, `curl_bins`, `jq_bins`
+- **Features**:
+  - Ladybug CLI tool (`/usr/bin/lbug`)
+  - Ladybug shared library and headers
+  - Bash, coreutils, curl, and jq for scripting
+  - OpenSSL 3 support
+
 ### bun
 Bun runtime container with full Node.js compatibility and SSL support.
 
@@ -92,6 +119,7 @@ Comprehensive Rust development and build container with LLVM/Clang toolchain.
 - **User**: `root`
 - **Rust Version**: 1.93.0
 - **Bun Version**: 1.3.9
+- **Ladybug Version**: v0.14.1
 - **Features**:
   - Rust toolchain with rustup, cargo, and rustc
   - LLVM 21 and Clang 21 compilers
@@ -103,6 +131,7 @@ Comprehensive Rust development and build container with LLVM/Clang toolchain.
   - Node.js development libraries
   - cargo-nextest and cargo-release
   - OpenSSL development libraries
+  - Ladybug graph database (library + CLI + headers)
 
 ## Building Images
 
@@ -117,6 +146,8 @@ docker buildx bake static
 docker buildx bake libc
 docker buildx bake libcxx-ssl
 docker buildx bake libcxx-ssl-tesseract
+docker buildx bake libcxx-ssl-ladybug
+docker buildx bake lbug-cli
 docker buildx bake bun
 docker buildx bake sqlx-cli
 docker buildx bake rustbuilder
@@ -153,6 +184,10 @@ Available scripts:
 - `install-libcxx.sh` - Configures LLVM C++ standard library symlinks
 - `install-tesseract.sh` - Installs Tesseract OCR with all language packs
 - `install-libcxx-tesseract.sh` - Combines libcxx and tesseract installation
+- `install-ladybug.sh` - Downloads and installs Ladybug shared library and headers
+- `install-lbug-cli.sh` - Downloads and installs Ladybug CLI
+- `install-libcxx-ladybug.sh` - Combines libcxx and ladybug library installation
+- `install-libcxx-ladybug-cli.sh` - Combines libcxx, ladybug library, and CLI installation
 
 Post-install scripts have access to:
 - `TARGETARCH` - Target architecture (amd64, arm64)
