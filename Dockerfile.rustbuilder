@@ -20,6 +20,7 @@ RUN apt-get update &&\
   lsb-release \
   gnupg \
   ca-certificates \
+  jq \
   build-essential \
   cmake \
   pkg-config \
