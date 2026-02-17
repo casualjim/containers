@@ -7,18 +7,14 @@ const isTruthy = (value: string | undefined): boolean => {
   return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
 };
 
-const otelEnabled = (process.env.OTEL_ENABLED ?? "true").trim().toLowerCase() !== "false";
+const env = Bun.env;
+const otelEnabled = (env.OTEL_ENABLED ?? "true").trim().toLowerCase() !== "false";
 
 if (otelEnabled) {
   await import("./telemetry.ts");
 }
 
-const [{ default: pino }, path, fs, { pathToFileURL }] = await Promise.all([
-  import("pino"),
-  import("node:path"),
-  import("node:fs"),
-  import("node:url"),
-]);
+const [{ default: pino }, fs, path] = await Promise.all([import("pino"), import("node:fs"), import("node:path")]);
 
 type Logger = ReturnType<typeof pino>;
 type InvocationResponse = {
@@ -26,22 +22,25 @@ type InvocationResponse = {
   body?: unknown;
   headers?: HeadersInit;
 };
+
 type InvocationContext = {
   request: Request;
   logger: Logger;
 };
-type UserFunction = (context: InvocationContext, callback?: InvokeCallback) => unknown;
+
 type InvokeCallback = (status?: number, body?: unknown, headers?: HeadersInit) => void;
+type UserFunction = (context: InvocationContext, callback?: InvokeCallback) => unknown;
+
 type V2SpecializeRequest = {
   filepath?: string;
   functionName?: string;
 };
 
 const loggerOptions: Record<string, unknown> = {
-  level: process.env.LOG_LEVEL ?? "info",
+  level: env.LOG_LEVEL ?? "info",
 };
 
-if (isTruthy(process.env.LOG_PRETTY)) {
+if (isTruthy(env.LOG_PRETTY)) {
   loggerOptions.transport = {
     target: "pino-pretty",
     options: {
@@ -57,23 +56,28 @@ const logger = pino(loggerOptions);
 const SUPPORTED_EXTENSIONS = [".ts", ".js", ".mjs", ".cjs"];
 const DEFAULT_V1_MODULE_PATH = "/userfunc/user";
 const APP_NODE_MODULES = "/app/node_modules";
+const USERFUNC_DIR = "/userfunc";
 const USERFUNC_NODE_MODULES = "/userfunc/node_modules";
 
 let userFunction: UserFunction | null = null;
 let specializedPath: string | null = null;
 
-const fileExists = (candidatePath: string): boolean => {
+const pathExists = (candidatePath: string): boolean => {
   try {
-    fs.accessSync(candidatePath, fs.constants.F_OK);
+    fs.lstatSync(candidatePath);
     return true;
   } catch {
     return false;
   }
 };
 
-const resolveWithExtensions = (candidatePath: string): string => {
+const fileExists = async (candidatePath: string): Promise<boolean> => {
+  return Bun.file(candidatePath).exists();
+};
+
+const resolveWithExtensions = async (candidatePath: string): Promise<string> => {
   if (path.extname(candidatePath) !== "") {
-    if (fileExists(candidatePath)) {
+    if (await fileExists(candidatePath)) {
       return candidatePath;
     }
 
@@ -82,7 +86,7 @@ const resolveWithExtensions = (candidatePath: string): string => {
 
   for (const extension of SUPPORTED_EXTENSIONS) {
     const withExtension = `${candidatePath}${extension}`;
-    if (fileExists(withExtension)) {
+    if (await fileExists(withExtension)) {
       return withExtension;
     }
   }
@@ -90,40 +94,46 @@ const resolveWithExtensions = (candidatePath: string): string => {
   throw new Error(`Could not resolve module with supported extensions: ${candidatePath}`);
 };
 
-const resolveDirectoryEntrypoint = (directoryPath: string): string => {
-  const packageJsonPath = path.join(directoryPath, "package.json");
-  if (fileExists(packageJsonPath)) {
-    try {
-      const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8")) as {
-        main?: string;
-      };
+const listSupportedFiles = async (directoryPath: string): Promise<string[]> => {
+  const glob = new Bun.Glob("*.{ts,js,mjs,cjs}");
+  const files: string[] = [];
 
+  for await (const match of glob.scan({ cwd: directoryPath, onlyFiles: true })) {
+    files.push(match);
+  }
+
+  files.sort();
+  return files;
+};
+
+const resolveDirectoryEntrypoint = async (directoryPath: string): Promise<string> => {
+  const packageJsonPath = path.join(directoryPath, "package.json");
+
+  if (await fileExists(packageJsonPath)) {
+    try {
+      const packageJson = (await Bun.file(packageJsonPath).json()) as { main?: string };
       if (typeof packageJson.main === "string" && packageJson.main.trim() !== "") {
         const mainPath = path.resolve(directoryPath, packageJson.main);
         try {
-          return resolveWithExtensions(mainPath);
+          return await resolveWithExtensions(mainPath);
         } catch {
           // Fall through to conventional entrypoint lookup.
         }
       }
     } catch {
-      // Ignore package.json parse errors.
+      // Ignore invalid package.json.
     }
   }
 
   for (const baseName of ["index", "user", "main"]) {
     try {
-      return resolveWithExtensions(path.join(directoryPath, baseName));
+      return await resolveWithExtensions(path.join(directoryPath, baseName));
     } catch {
       // Try next candidate.
     }
   }
 
-  const candidates = fs
-    .readdirSync(directoryPath)
-    .filter((name: string) => SUPPORTED_EXTENSIONS.includes(path.extname(name)))
-    .sort();
-
+  const candidates = await listSupportedFiles(directoryPath);
   if (candidates.length > 0) {
     return path.join(directoryPath, candidates[0]);
   }
@@ -131,27 +141,27 @@ const resolveDirectoryEntrypoint = (directoryPath: string): string => {
   throw new Error(`No supported module files found in ${directoryPath}`);
 };
 
-const resolveModulePath = (inputPath: string): string => {
+const resolveModulePath = async (inputPath: string): Promise<string> => {
   const absolutePath = path.isAbsolute(inputPath) ? inputPath : path.resolve(inputPath);
 
-  if (fileExists(absolutePath)) {
-    const stats = fs.statSync(absolutePath);
-    if (stats.isDirectory()) {
-      return resolveDirectoryEntrypoint(absolutePath);
-    }
-
-    return absolutePath;
+  if (!pathExists(absolutePath)) {
+    return resolveWithExtensions(absolutePath);
   }
 
-  return resolveWithExtensions(absolutePath);
+  const stats = fs.statSync(absolutePath);
+  if (stats.isDirectory()) {
+    return resolveDirectoryEntrypoint(absolutePath);
+  }
+
+  return absolutePath;
 };
 
 const ensureUserFuncNodeModulesSymlink = (): void => {
-  if (fileExists(USERFUNC_NODE_MODULES)) {
+  if (pathExists(USERFUNC_NODE_MODULES)) {
     return;
   }
 
-  if (!fileExists("/userfunc")) {
+  if (!pathExists(USERFUNC_DIR) || !pathExists(APP_NODE_MODULES)) {
     return;
   }
 
@@ -167,7 +177,8 @@ const ensureUserFuncNodeModulesSymlink = (): void => {
 
 const selectUserExport = (userModule: Record<string, unknown>, functionName?: string): UserFunction => {
   if (functionName) {
-    const named = userModule[functionName] ?? (userModule.default as Record<string, unknown> | undefined)?.[functionName];
+    const named =
+      userModule[functionName] ?? (userModule.default as Record<string, unknown> | undefined)?.[functionName];
     if (typeof named === "function") {
       return named as UserFunction;
     }
@@ -179,7 +190,10 @@ const selectUserExport = (userModule: Record<string, unknown>, functionName?: st
     return userModule.default as UserFunction;
   }
 
-  const exportedFunctions = Object.values(userModule).filter((value): value is UserFunction => typeof value === "function");
+  const exportedFunctions = Object.values(userModule).filter(
+    (value): value is UserFunction => typeof value === "function",
+  );
+
   if (exportedFunctions.length === 1) {
     return exportedFunctions[0];
   }
@@ -187,21 +201,23 @@ const selectUserExport = (userModule: Record<string, unknown>, functionName?: st
   throw new Error("No callable default export found");
 };
 
-const loadFunction = async (modulePathInput: string, functionName?: string): Promise<{ fn: UserFunction; modulePath: string }> => {
+const loadFunction = async (
+  modulePathInput: string,
+  functionName?: string,
+): Promise<{ fn: UserFunction; modulePath: string }> => {
   ensureUserFuncNodeModulesSymlink();
 
-  const modulePath = resolveModulePath(modulePathInput);
-  const moduleUrl = pathToFileURL(modulePath).href;
-  const userModule = (await import(moduleUrl)) as Record<string, unknown>;
-
+  const modulePath = await resolveModulePath(modulePathInput);
+  const userModule = (await import(modulePath)) as Record<string, unknown>;
   const fn = selectUserExport(userModule, functionName);
+
   return { fn, modulePath };
 };
 
 const parseV2SpecializeRequest = async (request: Request): Promise<{ modulePath: string; functionName?: string }> => {
   const body = (await request.json()) as V2SpecializeRequest;
 
-  const filepath = body.filepath && body.filepath.trim() !== "" ? body.filepath.trim() : "/userfunc";
+  const filepath = body.filepath?.trim() || USERFUNC_DIR;
   const functionName = body.functionName?.trim();
 
   if (!functionName) {
@@ -222,30 +238,17 @@ const parseV2SpecializeRequest = async (request: Request): Promise<{ modulePath:
   }
 
   const absoluteFilepath = path.isAbsolute(filepath) ? filepath : path.resolve(filepath);
-  if (fileExists(absoluteFilepath)) {
-    const stats = fs.statSync(absoluteFilepath);
-    if (stats.isDirectory()) {
-      try {
-        const resolvedAsFile = resolveWithExtensions(path.join(absoluteFilepath, functionName));
-        return { modulePath: resolvedAsFile };
-      } catch {
-        return {
-          modulePath: filepath,
-          functionName,
-        };
-      }
-    }
 
-    return {
-      modulePath: filepath,
-      functionName,
-    };
+  if (pathExists(absoluteFilepath) && fs.statSync(absoluteFilepath).isDirectory()) {
+    try {
+      const resolvedAsFile = await resolveWithExtensions(path.join(absoluteFilepath, functionName));
+      return { modulePath: resolvedAsFile };
+    } catch {
+      return { modulePath: filepath, functionName };
+    }
   }
 
-  return {
-    modulePath: filepath,
-    functionName,
-  };
+  return { modulePath: filepath, functionName };
 };
 
 const asResponseBody = (body: unknown, headers: Headers): BodyInit | null => {
@@ -269,7 +272,6 @@ const asResponseBody = (body: unknown, headers: Headers): BodyInit | null => {
     if (!headers.has("content-type")) {
       headers.set("content-type", "application/json");
     }
-
     return JSON.stringify(body);
   }
 
@@ -279,11 +281,7 @@ const asResponseBody = (body: unknown, headers: Headers): BodyInit | null => {
 const buildResponse = (status: number, body?: unknown, headers?: HeadersInit): Response => {
   const responseHeaders = new Headers(headers);
   const responseBody = asResponseBody(body, responseHeaders);
-
-  return new Response(responseBody, {
-    status,
-    headers: responseHeaders,
-  });
+  return new Response(responseBody, { status, headers: responseHeaders });
 };
 
 const normalizeInvocationResult = (result: unknown): Response => {
@@ -308,10 +306,7 @@ const invokeFunction = async (request: Request): Promise<Response> => {
     return new Response("Not specialized", { status: 500 });
   }
 
-  const context: InvocationContext = {
-    request,
-    logger,
-  };
+  const context: InvocationContext = { request, logger };
 
   if (userFunction.length <= 1) {
     const result = await Promise.resolve(userFunction(context));
@@ -325,7 +320,6 @@ const invokeFunction = async (request: Request): Promise<Response> => {
       if (settled) {
         return;
       }
-
       settled = true;
 
       if (typeof status !== "number") {
@@ -401,13 +395,19 @@ const server = Bun.serve({
     try {
       if (request.method === "POST" && url.pathname === "/specialize") {
         const response = await handleSpecializeV1();
-        logger.info({ method: request.method, path: url.pathname, status: response.status, durationMs: Date.now() - start }, "HTTP request");
+        logger.info(
+          { method: request.method, path: url.pathname, status: response.status, durationMs: Date.now() - start },
+          "HTTP request",
+        );
         return response;
       }
 
       if (request.method === "POST" && url.pathname === "/v2/specialize") {
         const response = await handleSpecializeV2(request);
-        logger.info({ method: request.method, path: url.pathname, status: response.status, durationMs: Date.now() - start }, "HTTP request");
+        logger.info(
+          { method: request.method, path: url.pathname, status: response.status, durationMs: Date.now() - start },
+          "HTTP request",
+        );
         return response;
       }
 
