@@ -238,7 +238,7 @@ ENV BUN_RUNTIME_TRANSPILER_CACHE_PATH="0"
 ENV PATH="$${PATH}:/usr/local/bun-node-fallback-bin"
 EXPOSE 8888
 USER 10001:10001
-ENTRYPOINT ["/usr/local/bin/bun", "run", "/app/server.ts"]
+ENTRYPOINT ["/usr/local/bin/bun", "--bun", "/app/server.ts"]
 EOD
   context    = "."
   platforms  = ["linux/amd64", "linux/arm64"]

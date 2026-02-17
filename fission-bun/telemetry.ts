@@ -1,19 +1,20 @@
-import process from "node:process";
-import { diag, DiagConsoleLogger, DiagLogLevel } from "@opentelemetry/api";
-import { NodeSDK } from "@opentelemetry/sdk-node";
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc";
-import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-grpc";
+import { DiagConsoleLogger, DiagLogLevel, diag } from "@opentelemetry/api";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
+import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-grpc";
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc";
 import { PeriodicExportingMetricReader } from "@opentelemetry/sdk-metrics";
+import { NodeSDK } from "@opentelemetry/sdk-node";
 
-const collectorAddress = process.env.OTEL_COLLECTOR_ADDR ?? "signoz-otel-collector.signoz.svc:4317";
-const serviceName = process.env.OTEL_SERVICE_NAME ?? "fission-bun-env";
+const env = Bun.env;
+const collectorAddress = env.OTEL_COLLECTOR_ADDR ?? "signoz-otel-collector.signoz.svc:4317";
+const serviceName = env.OTEL_SERVICE_NAME ?? "fission-bun-env";
 
-const endpoint = collectorAddress.startsWith("http://") || collectorAddress.startsWith("https://")
-  ? collectorAddress
-  : `http://${collectorAddress}`;
+const endpoint =
+  collectorAddress.startsWith("http://") || collectorAddress.startsWith("https://")
+    ? collectorAddress
+    : `http://${collectorAddress}`;
 
-if (process.env.OTEL_DIAG_LOG === "true") {
+if (env.OTEL_DIAG_LOG === "true") {
   diag.setLogger(new DiagConsoleLogger(), DiagLogLevel.INFO);
 }
 
