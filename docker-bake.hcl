@@ -34,6 +34,10 @@ variable "OPENBAO_CLOUDFLARE_PLUGIN_VERSION" {
   default = "0.2.1"
 }
 
+variable "OPENBAO_CLICKHOUSE_PLUGIN_REF" {
+  default = "a8e2ab243ae71daf0ffd942677ba4a7bce4e4f0c"
+}
+
 variable "LADYBUG_VERSION" {
   default = "v0.14.1"
 }
@@ -241,8 +245,9 @@ target "openbao" {
   context    = "."
   platforms  = ["linux/amd64", "linux/arm64"]
   args = {
-    OPENBAO_VERSION  = OPENBAO_VERSION
-    PLUGIN_VERSION   = OPENBAO_CLOUDFLARE_PLUGIN_VERSION
+    OPENBAO_VERSION            = OPENBAO_VERSION
+    CLOUDFLARE_PLUGIN_VERSION  = OPENBAO_CLOUDFLARE_PLUGIN_VERSION
+    CLICKHOUSE_PLUGIN_REF      = OPENBAO_CLICKHOUSE_PLUGIN_REF
   }
   tags = [
     "${REGISTRY}/openbao:${OPENBAO_VERSION}",
@@ -278,4 +283,3 @@ target "netdebug" {
 group "default" {
   targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "rustbuilder", "openbao", "netdebug"]
 }
-

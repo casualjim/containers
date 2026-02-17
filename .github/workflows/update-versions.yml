@@ -52,6 +52,15 @@ jobs:
           echo "Latest Cloudflare plugin version: $LATEST_PLUGIN"
           echo "version=$LATEST_PLUGIN" >> $GITHUB_OUTPUT
 
+      - name: Get latest ClickHouse plugin ref
+        id: clickhouse-plugin-ref
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          LATEST_CLICKHOUSE_PLUGIN_REF=$(./scripts/get-clickhouse-plugin-ref.sh)
+          echo "Latest ClickHouse plugin ref: $LATEST_CLICKHOUSE_PLUGIN_REF"
+          echo "ref=$LATEST_CLICKHOUSE_PLUGIN_REF" >> $GITHUB_OUTPUT
+
       - name: Get current versions from docker-bake.hcl
         id: current-versions
         run: |
@@ -59,15 +68,18 @@ jobs:
           CURRENT_BUN=$(./scripts/get-current-bun-version.sh)
           CURRENT_OPENBAO=$(./scripts/get-current-openbao-version.sh)
           CURRENT_PLUGIN=$(./scripts/get-current-cloudflare-plugin-version.sh)
+          CURRENT_CLICKHOUSE_PLUGIN_REF=$(./scripts/get-current-clickhouse-plugin-ref.sh)
           
           echo "Current Rust version: $CURRENT_RUST"
           echo "Current Bun version: $CURRENT_BUN"
           echo "Current OpenBao version: $CURRENT_OPENBAO"
           echo "Current Cloudflare plugin version: $CURRENT_PLUGIN"
+          echo "Current ClickHouse plugin ref: $CURRENT_CLICKHOUSE_PLUGIN_REF"
           echo "rust=$CURRENT_RUST" >> $GITHUB_OUTPUT
           echo "bun=$CURRENT_BUN" >> $GITHUB_OUTPUT
           echo "openbao=$CURRENT_OPENBAO" >> $GITHUB_OUTPUT
           echo "plugin=$CURRENT_PLUGIN" >> $GITHUB_OUTPUT
+          echo "clickhouse_plugin_ref=$CURRENT_CLICKHOUSE_PLUGIN_REF" >> $GITHUB_OUTPUT
 
       - name: Check if updates are needed
         id: check-updates
@@ -76,6 +88,7 @@ jobs:
           BUN_UPDATE="false"
           OPENBAO_UPDATE="false"
           PLUGIN_UPDATE="false"
+          CLICKHOUSE_PLUGIN_UPDATE="false"
           UPDATE_NEEDED="false"
           
           if [ "${{ steps.rust-version.outputs.version }}" != "${{ steps.current-versions.outputs.rust }}" ]; then
@@ -109,11 +122,20 @@ jobs:
           else
             echo "Cloudflare plugin version is up to date: ${{ steps.current-versions.outputs.plugin }}"
           fi
+
+          if [ "${{ steps.clickhouse-plugin-ref.outputs.ref }}" != "${{ steps.current-versions.outputs.clickhouse_plugin_ref }}" ]; then
+            echo "ClickHouse plugin ref update needed: ${{ steps.current-versions.outputs.clickhouse_plugin_ref }} -> ${{ steps.clickhouse-plugin-ref.outputs.ref }}"
+            CLICKHOUSE_PLUGIN_UPDATE="true"
+            UPDATE_NEEDED="true"
+          else
+            echo "ClickHouse plugin ref is up to date: ${{ steps.current-versions.outputs.clickhouse_plugin_ref }}"
+          fi
           
           echo "rust_update=$RUST_UPDATE" >> $GITHUB_OUTPUT
           echo "bun_update=$BUN_UPDATE" >> $GITHUB_OUTPUT
           echo "openbao_update=$OPENBAO_UPDATE" >> $GITHUB_OUTPUT
           echo "plugin_update=$PLUGIN_UPDATE" >> $GITHUB_OUTPUT
+          echo "clickhouse_plugin_update=$CLICKHOUSE_PLUGIN_UPDATE" >> $GITHUB_OUTPUT
           echo "update_needed=$UPDATE_NEEDED" >> $GITHUB_OUTPUT
 
       - name: Update docker-bake.hcl
@@ -137,6 +159,11 @@ jobs:
           if [ "${{ steps.check-updates.outputs.plugin_update }}" == "true" ]; then
             ./scripts/update-cloudflare-plugin-version.sh "${{ steps.cloudflare-plugin-version.outputs.version }}"
             echo "Updated OPENBAO_CLOUDFLARE_PLUGIN_VERSION to ${{ steps.cloudflare-plugin-version.outputs.version }}"
+          fi
+
+          if [ "${{ steps.check-updates.outputs.clickhouse_plugin_update }}" == "true" ]; then
+            ./scripts/update-clickhouse-plugin-ref.sh "${{ steps.clickhouse-plugin-ref.outputs.ref }}"
+            echo "Updated OPENBAO_CLICKHOUSE_PLUGIN_REF to ${{ steps.clickhouse-plugin-ref.outputs.ref }}"
           fi
 
       - name: Update README.md
@@ -170,6 +197,7 @@ jobs:
           [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ] && UPDATES+=("Bun ${{ steps.bun-version.outputs.version }}")
           [ "${{ steps.check-updates.outputs.openbao_update }}" == "true" ] && UPDATES+=("OpenBao ${{ steps.openbao-version.outputs.version }}")
           [ "${{ steps.check-updates.outputs.plugin_update }}" == "true" ] && UPDATES+=("Cloudflare plugin ${{ steps.cloudflare-plugin-version.outputs.version }}")
+          [ "${{ steps.check-updates.outputs.clickhouse_plugin_update }}" == "true" ] && UPDATES+=("ClickHouse plugin ref ${{ steps.clickhouse-plugin-ref.outputs.ref }}")
           
           COMMIT_MSG="chore: update ${UPDATES[*]}"
           git commit -m "$COMMIT_MSG"
@@ -180,6 +208,7 @@ jobs:
           [ "${{ steps.check-updates.outputs.bun_update }}" == "true" ] && PR_BODY="$PR_BODY\n- Bun: \`${{ steps.current-versions.outputs.bun }}\` → \`${{ steps.bun-version.outputs.version }}\`"
           [ "${{ steps.check-updates.outputs.openbao_update }}" == "true" ] && PR_BODY="$PR_BODY\n- OpenBao: \`${{ steps.current-versions.outputs.openbao }}\` → \`${{ steps.openbao-version.outputs.version }}\`"
           [ "${{ steps.check-updates.outputs.plugin_update }}" == "true" ] && PR_BODY="$PR_BODY\n- Cloudflare plugin: \`${{ steps.current-versions.outputs.plugin }}\` → \`${{ steps.cloudflare-plugin-version.outputs.version }}\`"
+          [ "${{ steps.check-updates.outputs.clickhouse_plugin_update }}" == "true" ] && PR_BODY="$PR_BODY\n- ClickHouse plugin ref: \`${{ steps.current-versions.outputs.clickhouse_plugin_ref }}\` → \`${{ steps.clickhouse-plugin-ref.outputs.ref }}\`"
           PR_BODY="$PR_BODY\n\n---\n*Auto-generated by [update-versions workflow](https://github.com/${{ github.repository }}/actions/workflows/update-versions.yml)*"
           
           PR_TITLE="chore: update ${UPDATES[*]}"
