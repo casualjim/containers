@@ -223,6 +223,35 @@ EOD
   ]
 }
 
+# fission-bun: Fission Bun environment runtime
+target "fission-bun" {
+  dockerfile-inline = <<EOD
+FROM bun-builder
+USER root
+WORKDIR /app
+COPY fission-bun/ /app/
+RUN bun install --frozen-lockfile --production \
+  && mkdir -p /userfunc \
+  && chown -R 10001:10001 /app /userfunc
+ENV BUN_INSTALL_BIN=/usr/local/bin
+ENV BUN_RUNTIME_TRANSPILER_CACHE_PATH="0"
+ENV PATH="$${PATH}:/usr/local/bun-node-fallback-bin"
+EXPOSE 8888
+USER 10001:10001
+ENTRYPOINT ["/usr/local/bin/bun", "run", "/app/server.ts"]
+EOD
+  context    = "."
+  platforms  = ["linux/amd64", "linux/arm64"]
+  contexts = {
+    bun-builder = "target:bun-builder"
+  }
+  tags = [
+    "${REGISTRY}/fission-bun:${TAG}",
+    "${REGISTRY}/fission-bun:${UBUNTU_RELEASE}",
+    "${REGISTRY}/fission-bun:${UBUNTU_RELEASE}-${BUILD_NUMBER}",
+  ]
+}
+
 target "rustbuilder" {
   dockerfile = "Dockerfile.rustbuilder"
   context    = "."
@@ -281,5 +310,5 @@ target "netdebug" {
 
 # Group to build all images
 group "default" {
-  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "rustbuilder", "openbao", "netdebug"]
+  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "fission-bun", "rustbuilder", "openbao", "netdebug"]
 }
