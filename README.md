@@ -144,7 +144,8 @@ Network debugging and troubleshooting toolkit for containerized environments.
   - **Packet capture/analysis**: tcpdump, ngrep
   - **Connectivity testing**: ping, traceroute, mtr, netcat, socat, arping, telnet
   - **DNS tools**: dig, nslookup, host, dnsutils
-  - **Database clients**: postgresql-client (psql), redis-tools (redis-cli)
+  - **Database clients**: postgresql-client-18 (psql), redis-tools (redis-cli), clickhouse-client
+  - **Platform/service CLIs**: kubectl, nats CLI, OpenBao CLI (`bao`/`openbao`), grpcurl
   - **HTTP/SSL**: curl, openssl, ca-certificates
   - **Network monitoring/scanning**: nmap, iperf3, iftop, nethogs, conntrack, ethtool, bridge-utils
   - **Legacy tools**: net-tools (netstat, ifconfig), inetutils-traceroute
