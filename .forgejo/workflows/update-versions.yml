@@ -32,7 +32,7 @@ jobs:
       - name: Get latest Bun version
         id: bun-version
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MIRROR_GITHUB_TOKEN: ${{ secrets.MIRROR_GITHUB_TOKEN }}
         run: |
           LATEST_BUN=$(./scripts/get-bun-version.sh)
           echo "Latest Bun version: $LATEST_BUN"
@@ -41,7 +41,7 @@ jobs:
       - name: Get latest OpenBao version
         id: openbao-version
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MIRROR_GITHUB_TOKEN: ${{ secrets.MIRROR_GITHUB_TOKEN }}
         run: |
           LATEST_OPENBAO=$(./scripts/get-openbao-version.sh)
           echo "Latest OpenBao version: $LATEST_OPENBAO"
@@ -50,7 +50,7 @@ jobs:
       - name: Get latest Cloudflare plugin version
         id: cloudflare-plugin-version
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MIRROR_GITHUB_TOKEN: ${{ secrets.MIRROR_GITHUB_TOKEN }}
         run: |
           LATEST_PLUGIN=$(./scripts/get-cloudflare-plugin-version.sh)
           echo "Latest Cloudflare plugin version: $LATEST_PLUGIN"
