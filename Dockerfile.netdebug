@@ -47,12 +47,19 @@ COPY --from=umber-downloader /usr/local/bin/umber /usr/local/bin/umber
 # Install network debugging and troubleshooting tools
 RUN apt-get update -yq && \
     apt-get install -yqq --no-install-recommends ca-certificates curl gnupg && \
-    install -d /etc/apt/keyrings && \
-    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
-      | gpg --dearmor -o /etc/apt/keyrings/pgdg.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt questing-pgdg main" \
-      > /etc/apt/sources.list.d/pgdg.list && \
-    apt-get update -yq && \
+    case "$TARGETARCH" in \
+      amd64) KUBECTL_ARCH="amd64"; NATS_ARCH="amd64"; GRPCURL_ARCH="amd64"; OPENBAO_ARCH="x86_64"; CLICKHOUSE_ARCH="amd64"; POSTGRES_CLIENT_PACKAGE="postgresql-client-18" ;; \
+      arm64) KUBECTL_ARCH="arm64"; NATS_ARCH="arm64"; GRPCURL_ARCH="arm64"; OPENBAO_ARCH="arm64"; CLICKHOUSE_ARCH="arm64"; POSTGRES_CLIENT_PACKAGE="postgresql-client" ;; \
+      *) echo "Unsupported architecture: $TARGETARCH"; exit 1 ;; \
+    esac && \
+    if [ "$TARGETARCH" = "amd64" ]; then \
+      install -d /etc/apt/keyrings && \
+      curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+        | gpg --dearmor -o /etc/apt/keyrings/pgdg.gpg && \
+      echo "deb [signed-by=/etc/apt/keyrings/pgdg.gpg] https://apt.postgresql.org/pub/repos/apt questing-pgdg main" \
+        > /etc/apt/sources.list.d/pgdg.list && \
+      apt-get update -yq; \
+    fi && \
     apt-get install -yqq --no-install-recommends \
     # Original requested packages
     gzip \
@@ -66,7 +73,7 @@ RUN apt-get update -yq && \
     iputils-tracepath \
     tcpdump \
     redis-tools \
-    postgresql-client-18 \
+    "${POSTGRES_CLIENT_PACKAGE}" \
     iproute2 \
     net-tools \
     inetutils-traceroute \
@@ -91,11 +98,6 @@ RUN apt-get update -yq && \
     # Shell and init
     bash \
     tini && \
-    case "$TARGETARCH" in \
-      amd64) KUBECTL_ARCH="amd64"; NATS_ARCH="amd64"; GRPCURL_ARCH="amd64"; OPENBAO_ARCH="x86_64"; CLICKHOUSE_ARCH="amd64" ;; \
-      arm64) KUBECTL_ARCH="arm64"; NATS_ARCH="arm64"; GRPCURL_ARCH="arm64"; OPENBAO_ARCH="arm64"; CLICKHOUSE_ARCH="arm64" ;; \
-      *) echo "Unsupported architecture: $TARGETARCH"; exit 1 ;; \
-    esac && \
     curl -fsSL \
       "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${KUBECTL_ARCH}/kubectl" \
       -o /usr/local/bin/kubectl && \
