@@ -24,6 +24,8 @@ RUN apt-get update &&\
   build-essential \
   cmake \
   pkg-config \
+  libglib2.0-dev \
+  libpoppler-glib-dev \
   libprotobuf-dev \
   protobuf-compiler \
   libssl-dev \
