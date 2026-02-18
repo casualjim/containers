@@ -4,6 +4,21 @@ This repository uses Docker Bake to build multiple chisel-based container images
 
 ## Available Images
 
+Images published by CI to GHCR:
+- `ghcr.io/casualjim/bare:static`
+- `ghcr.io/casualjim/bare:libc`
+- `ghcr.io/casualjim/bare:libc-ssl`
+- `ghcr.io/casualjim/bare:libcxx`
+- `ghcr.io/casualjim/bare:libcxx-ssl`
+- `ghcr.io/casualjim/bare:libcxx-ssl-tesseract`
+- `ghcr.io/casualjim/bare:libcxx-ssl-ladybug`
+- `ghcr.io/casualjim/lbug-cli:latest`
+- `ghcr.io/casualjim/bun:latest`
+- `ghcr.io/casualjim/sqlx-cli:latest`
+- `ghcr.io/casualjim/rust-builder:latest`
+- `ghcr.io/casualjim/openbao:latest`
+- `ghcr.io/casualjim/netdebug:latest`
+
 ### static
 Minimal base image with no extra packages, designed for static applications and Go binaries that don't require additional system libraries.
 
@@ -98,6 +113,14 @@ Bun runtime container with full Node.js compatibility and SSL support.
   - Optimized for container environments (transpiler cache disabled)
   - GPG-verified binary downloads
 
+### fission-bun
+Fission Bun environment runtime target.
+
+- **Base**: `bun-builder` target (Chiseled Ubuntu 25.10)
+- **Repository**: `ghcr.io/casualjim/fission-bun:latest`
+- **User**: `appuser` (UID 10001, non-root)
+- **Note**: Build target exists in `docker-bake.hcl`, but it is not currently pushed by the default CI build workflows.
+
 ### sqlx-cli
 SQLx CLI tool container for database management and migrations.
 
@@ -133,6 +156,17 @@ Comprehensive Rust development and build container with LLVM/Clang toolchain.
   - OpenSSL development libraries
   - Ladybug graph database (library + CLI + headers)
 
+### openbao
+OpenBao image with bundled Cloudflare and ClickHouse database plugins.
+
+- **Base**: `openbao/openbao:2.5.0`
+- **Repository**: `ghcr.io/casualjim/openbao:latest`
+- **Features**:
+  - `vault-plugin-secrets-cloudflare`
+  - `vault-plugin-database-clickhouse`
+  - Plugin checksum files included in `/openbao/plugins/`
+  - Plugin metadata labels for version/ref and SHA256 values
+
 ### netdebug
 Network debugging and troubleshooting toolkit for containerized environments.
 
@@ -164,13 +198,17 @@ Build a specific image:
 ```bash
 docker buildx bake static
 docker buildx bake libc
+docker buildx bake libc-ssl
+docker buildx bake libcxx
 docker buildx bake libcxx-ssl
 docker buildx bake libcxx-ssl-tesseract
 docker buildx bake libcxx-ssl-ladybug
 docker buildx bake lbug-cli
 docker buildx bake bun
+docker buildx bake fission-bun
 docker buildx bake sqlx-cli
 docker buildx bake rustbuilder
+docker buildx bake openbao
 docker buildx bake netdebug
 ```
 
@@ -230,7 +268,8 @@ To manually sync:
 ./sync-chisel-slices.sh
 ```
 
-The GitHub Actions workflow automatically syncs chisel slices weekly and commits any updates before building images.
+The Forgejo sync workflow runs weekly and commits any slice updates:
+- `.forgejo/workflows/sync-chisel.yml`
 
 ## Adding New Variants
 
@@ -288,8 +327,12 @@ tar -xzf chisel_v1.2.0_linux_amd64.tar.gz
 
 ## Workflow
 
-The Forgejo Actions workflow (`.forgejo/workflows/build.yml`) builds and pushes images:
+Build and push workflow:
+- `.forgejo/workflows/build.yml`
+
+It builds on push/PR and on a weekly schedule:
 - On push to the `main` branch
 - Every Wednesday at 5PM UTC
 
-The workflow also automatically syncs chisel slices from upstream before building.
+Chisel slice sync is a separate workflow:
+- `.forgejo/workflows/sync-chisel.yml`

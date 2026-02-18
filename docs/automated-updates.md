@@ -2,14 +2,21 @@
 
 This repository includes automated workflows for keeping dependencies up-to-date.
 
-## Rust and Bun Version Updates
+## Automated Version Updates
 
-The `.github/workflows/update-versions.yml` workflow automatically updates Rust and Bun versions in `docker-bake.hcl`.
+Version update workflow:
+- `.forgejo/workflows/update-versions.yml`
+
+Managed values in `docker-bake.hcl`:
+- `RUST_VERSION`
+- `BUN_VERSION`
+- `OPENBAO_VERSION`
+- `OPENBAO_CLOUDFLARE_PLUGIN_VERSION`
 
 ### Schedule
 
 - **Runs**: Daily at 2 AM PST (10 AM UTC)
-- **Can be triggered manually**: Via GitHub Actions UI
+- **Can be triggered manually**: Via `workflow_dispatch` in Forgejo Actions UI
 
 ### How It Works
 
@@ -17,18 +24,20 @@ The `.github/workflows/update-versions.yml` workflow automatically updates Rust 
    - Uses reusable scripts in `scripts/` directory
    - Queries the latest stable Rust version from the official Rust stable channel
    - Queries the latest stable Bun release from GitHub (excludes pre-releases)
+   - Queries the latest OpenBao release
+   - Queries the latest Cloudflare plugin release
    
 2. **Change Detection**
    - Compares fetched versions with current versions in `docker-bake.hcl`
    - Only proceeds if a version change is detected
 
 3. **Update Process**
-   - Updates `RUST_VERSION` and/or `BUN_VERSION` in `docker-bake.hcl` using shared scripts
-   - Creates or updates a branch named `bot/rust-bun-bump`
-   - Commits changes with message: `chore: update Rust/Bun version in docker-bake.hcl`
+   - Updates changed values in `docker-bake.hcl` using shared scripts
+   - Creates or updates a branch named `bot/version-bump`
+   - Commits changes with a generated `chore: update ...` message
 
 4. **Pull Request**
-   - Creates or updates a PR from `bot/rust-bun-bump` to `main`
+   - Creates or updates a PR from `bot/version-bump` to `main`
    - Includes detailed change information
    - Enables auto-merge (squash merge)
 
@@ -47,14 +56,20 @@ The workflow uses reusable shell scripts in the `scripts/` directory:
 
 - `get-rust-version.sh` - Fetches latest Rust version
 - `get-bun-version.sh` - Fetches latest Bun version
+- `get-openbao-version.sh` - Fetches latest OpenBao version
+- `get-cloudflare-plugin-version.sh` - Fetches latest Cloudflare plugin version
 - `get-current-rust-version.sh` - Extracts current Rust version from docker-bake.hcl
 - `get-current-bun-version.sh` - Extracts current Bun version from docker-bake.hcl
+- `get-current-openbao-version.sh` - Extracts current OpenBao version from docker-bake.hcl
+- `get-current-cloudflare-plugin-version.sh` - Extracts current Cloudflare plugin version from docker-bake.hcl
 - `update-rust-version.sh` - Updates Rust version in docker-bake.hcl
 - `update-bun-version.sh` - Updates Bun version in docker-bake.hcl
+- `update-openbao-version.sh` - Updates OpenBao version in docker-bake.hcl
+- `update-cloudflare-plugin-version.sh` - Updates Cloudflare plugin version in docker-bake.hcl
 
 This ensures the same logic is used by:
-- Production workflow (`.github/workflows/update-versions.yml`)
-- Local test script (`test-update-versions.sh`)
+- Production workflow (`.forgejo/workflows/update-versions.yml`)
+- Local test script (`test-update-versions.sh`) for Rust/Bun checks
 
 See `scripts/README.md` for detailed script documentation.
 
@@ -64,12 +79,14 @@ No manual intervention is required. However, you can:
 
 - **Disable auto-merge**: Close the PR or disable auto-merge manually
 - **Review changes**: Check the PR before it auto-merges
-- **Trigger manually**: Use workflow_dispatch in GitHub Actions
+- **Trigger manually**: Use `workflow_dispatch`
 
 ### Version Sources
 
 - **Rust**: https://static.rust-lang.org/dist/channel-rust-stable.toml
 - **Bun**: https://api.github.com/repos/oven-sh/bun/releases
+- **OpenBao**: https://api.github.com/repos/openbao/openbao/releases/latest
+- **Cloudflare plugin**: https://api.github.com/repos/bloominlabs/vault-plugin-secrets-cloudflare/releases/latest
 
 ### Extending
 
@@ -96,4 +113,4 @@ See [Testing the Update Workflow](testing-update-workflow.md) for detailed testi
 
 ## Chisel Slice Updates
 
-See the existing `.github/workflows/sync-chisel.yml` for automatic chisel slice synchronization.
+See `.forgejo/workflows/sync-chisel.yml` for automatic chisel slice synchronization.

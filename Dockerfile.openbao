@@ -2,6 +2,7 @@ ARG OPENBAO_VERSION=2.5.0
 ARG CLOUDFLARE_PLUGIN_VERSION=0.2.1
 ARG CLOUDFLARE_PLUGIN_SHA256=""
 ARG CLICKHOUSE_PLUGIN_REF=main
+ARG CLICKHOUSE_PLUGIN_SHA256=""
 
 FROM golang:alpine AS plugin-builder
 
@@ -22,6 +23,7 @@ ARG OPENBAO_VERSION
 ARG CLOUDFLARE_PLUGIN_VERSION
 ARG CLOUDFLARE_PLUGIN_SHA256
 ARG CLICKHOUSE_PLUGIN_REF
+ARG CLICKHOUSE_PLUGIN_SHA256
 
 LABEL org.opencontainers.image.title="OpenBao with Cloudflare and ClickHouse plugins"
 LABEL org.opencontainers.image.description="OpenBao with vault-plugin-secrets-cloudflare and vault-plugin-database-clickhouse"
@@ -31,6 +33,7 @@ LABEL io.github.casualjim.openbao.version="${OPENBAO_VERSION}"
 LABEL io.github.casualjim.openbao.cloudflare-plugin.version="${CLOUDFLARE_PLUGIN_VERSION}"
 LABEL io.github.casualjim.openbao.cloudflare-plugin.sha256="${CLOUDFLARE_PLUGIN_SHA256}"
 LABEL io.github.casualjim.openbao.clickhouse-plugin.ref="${CLICKHOUSE_PLUGIN_REF}"
+LABEL io.github.casualjim.openbao.clickhouse-plugin.sha256="${CLICKHOUSE_PLUGIN_SHA256}"
 
 COPY --from=plugin-builder /go/bin/cloudflare /openbao/plugins/vault-plugin-secrets-cloudflare
 COPY --from=plugin-builder /go/bin/cloudflare.sha256 /openbao/plugins/.vault-plugin-secrets-cloudflare.sha256

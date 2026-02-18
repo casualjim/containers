@@ -81,9 +81,12 @@ jobs:
       - name: Get plugin SHA256
         id: get-sha
         run: |
-          SHA=$(cat /tmp/openbao-build/openbao/plugins/.vault-plugin-secrets-cloudflare.sha256)
-          echo "sha256=${SHA}" >> $GITHUB_OUTPUT
-          echo "Plugin SHA256: ${SHA}"
+          CLOUDFLARE_SHA=$(cat /tmp/openbao-build/openbao/plugins/.vault-plugin-secrets-cloudflare.sha256)
+          CLICKHOUSE_SHA=$(cat /tmp/openbao-build/openbao/plugins/.vault-plugin-database-clickhouse.sha256)
+          echo "cloudflare_sha256=${CLOUDFLARE_SHA}" >> $GITHUB_OUTPUT
+          echo "clickhouse_sha256=${CLICKHOUSE_SHA}" >> $GITHUB_OUTPUT
+          echo "Cloudflare plugin SHA256: ${CLOUDFLARE_SHA}"
+          echo "ClickHouse plugin SHA256: ${CLICKHOUSE_SHA}"
 
       - name: Build and push openbao
         uses: docker/bake-action@v6
@@ -93,6 +96,7 @@ jobs:
           targets: openbao
           set: |
             *.platform=linux/amd64
-            openbao.args.PLUGIN_SHA256=${{ steps.get-sha.outputs.sha256 }}
+            openbao.args.CLOUDFLARE_PLUGIN_SHA256=${{ steps.get-sha.outputs.cloudflare_sha256 }}
+            openbao.args.CLICKHOUSE_PLUGIN_SHA256=${{ steps.get-sha.outputs.clickhouse_sha256 }}
         env:
           BUILD_NUMBER: ${{ github.run_number }}

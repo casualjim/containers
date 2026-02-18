@@ -6,7 +6,7 @@ This guide explains how to test the automated version update workflow to ensure 
 
 ### 1. Local Testing Script
 
-The `test-update-versions.sh` script validates the core workflow logic locally without requiring GitHub Actions.
+The `test-update-versions.sh` script validates the core workflow logic locally without requiring Forgejo Actions.
 
 #### Running the Script
 
@@ -56,8 +56,8 @@ All tests passed!
 
 To test the actual workflow end-to-end (including PR creation):
 
-1. Go to **Actions** tab
-2. Select **"Update Rust and Bun Versions"** workflow
+1. Go to the **Actions** tab in Forgejo
+2. Select the **"Update Versions"** workflow
 3. Click **"Run workflow"** and confirm
 4. Monitor the workflow execution
 5. Check if a PR is created (if versions differ)
@@ -90,7 +90,7 @@ The local test script can be run in CI to validate the workflow logic:
 Before deploying changes to the workflow:
 
 1. Run `./test-update-versions.sh` locally
-2. Validate YAML syntax: `python3 -c "import yaml; yaml.safe_load(open('.github/workflows/update-versions.yml'))"`
+2. Validate YAML syntax: `python3 -c "import yaml; yaml.safe_load(open('.forgejo/workflows/update-versions.yml'))"`
 3. Review the workflow file for any syntax errors
 4. Optionally test end-to-end with manual workflow trigger
 
@@ -114,7 +114,7 @@ Before deploying changes to the workflow:
 - Verify auto-merge is enabled in repository settings
 - Check that required status checks are configured
 - Ensure the build workflow runs on pull_request events
-- Verify the PR is from the correct branch (bot/rust-bun-bump)
+- Verify the PR is from the correct branch (`bot/version-bump`)
 
 ## Best Practices
 

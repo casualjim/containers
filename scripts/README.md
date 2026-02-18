@@ -1,6 +1,6 @@
 # Version Management Scripts
 
-This directory contains reusable shell scripts for managing Rust and Bun versions in `docker-bake.hcl`. These scripts are used by both the production workflows and test scripts to ensure consistency.
+This directory contains reusable shell scripts for managing version and plugin reference values in `docker-bake.hcl`. These scripts are used by production workflows and local tests to ensure consistency.
 
 ## Scripts
 
@@ -23,10 +23,19 @@ Fetches the latest stable Bun version from GitHub releases API, excluding pre-re
 ./scripts/get-bun-version.sh
 
 # With authentication (to avoid rate limiting)
-GITHUB_TOKEN=your_token ./scripts/get-bun-version.sh
+MIRROR_GITHUB_TOKEN=your_token ./scripts/get-bun-version.sh
 ```
 
 **Output:** Version string (e.g., `1.4.0`)
+
+### `get-openbao-version.sh`
+Fetches the latest OpenBao version from GitHub releases API.
+
+### `get-cloudflare-plugin-version.sh`
+Fetches the latest Cloudflare plugin version from GitHub releases API.
+
+### `get-clickhouse-plugin-ref.sh`
+Fetches the latest ClickHouse plugin commit SHA from the `main` branch.
 
 ### `get-current-rust-version.sh`
 Extracts the current RUST_VERSION from `docker-bake.hcl`.
@@ -56,6 +65,15 @@ Extracts the current BUN_VERSION from `docker-bake.hcl`.
 
 **Output:** Version string (e.g., `1.3.1`)
 
+### `get-current-openbao-version.sh`
+Extracts the current OPENBAO_VERSION from `docker-bake.hcl`.
+
+### `get-current-cloudflare-plugin-version.sh`
+Extracts the current OPENBAO_CLOUDFLARE_PLUGIN_VERSION from `docker-bake.hcl`.
+
+### `get-current-clickhouse-plugin-ref.sh`
+Extracts the current OPENBAO_CLICKHOUSE_PLUGIN_REF from `docker-bake.hcl`.
+
 ### `update-rust-version.sh`
 Updates the RUST_VERSION in `docker-bake.hcl`.
 
@@ -83,6 +101,15 @@ Updates the BUN_VERSION in `docker-bake.hcl`.
 ```
 
 **Effect:** Updates the `default` value in the `BUN_VERSION` variable block
+
+### `update-openbao-version.sh`
+Updates OPENBAO_VERSION in `docker-bake.hcl`.
+
+### `update-cloudflare-plugin-version.sh`
+Updates OPENBAO_CLOUDFLARE_PLUGIN_VERSION in `docker-bake.hcl`.
+
+### `update-clickhouse-plugin-ref.sh`
+Updates OPENBAO_CLICKHOUSE_PLUGIN_REF in `docker-bake.hcl`.
 
 ### `update-readme-rust-version.sh`
 Updates the Rust version in `README.md` documentation.
@@ -122,9 +149,8 @@ Updates the Bun version in `README.md` documentation.
 
 ## Used By
 
-- `.github/workflows/update-versions.yml` - Production update workflow
-- `.github/workflows/test-update-versions.yml` - Dry-run test workflow
-- `test-update-versions.sh` - Local test script
+- `.forgejo/workflows/update-versions.yml` - Forgejo update workflow
+- `test-update-versions.sh` - Local Rust/Bun update test script
 - Can be used manually for ad-hoc version management
 
 ## Adding New Version Scripts

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Test script for update-versions workflow logic
-# This script validates the core functionality without requiring GitHub Actions
+# This script validates the core functionality without requiring Forgejo Actions
 
 set -euo pipefail
 
@@ -179,14 +179,14 @@ test_workflow_syntax() {
     log_info "Test 6: Validating workflow YAML syntax..."
     
     if command -v python3 >/dev/null 2>&1; then
-        if python3 -c "import yaml; yaml.safe_load(open('$REPO_ROOT/.github/workflows/update-versions.yml'))" 2>/dev/null; then
+        if python3 -c "import yaml; yaml.safe_load(open('$REPO_ROOT/.forgejo/workflows/update-versions.yml'))" 2>/dev/null; then
             test_pass "update-versions.yml has valid YAML syntax"
         else
             test_fail "update-versions.yml has invalid YAML syntax"
             return 1
         fi
         
-        if python3 -c "import yaml; yaml.safe_load(open('$REPO_ROOT/.github/workflows/build.yml'))" 2>/dev/null; then
+        if python3 -c "import yaml; yaml.safe_load(open('$REPO_ROOT/.forgejo/workflows/build.yml'))" 2>/dev/null; then
             test_pass "build.yml has valid YAML syntax"
         else
             test_fail "build.yml has invalid YAML syntax"
