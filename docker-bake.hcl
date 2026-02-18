@@ -286,7 +286,7 @@ target "openbao" {
 }
 
 # netdebug: Network debugging and troubleshooting toolkit
-# Includes: tcpdump, ngrep, nmap, curl, postgresql-client, redis-tools, jq, ripgrep, eza, umber and more
+# Includes: tcpdump, ngrep, nmap, curl, psql(18), redis-cli, kubectl, nats, bao/openbao, clickhouse-client, grpcurl, jq, ripgrep, eza, umber and more
 # Designed for debugging network issues in containerized environments
 # Runs as root for full network interface access
 # Note: This image is larger than chisel-based images due to full Ubuntu base
