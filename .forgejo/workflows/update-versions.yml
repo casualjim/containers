@@ -206,7 +206,7 @@ jobs:
             # Create new PR
             curl -s -X POST -H "Authorization: token $GITHUB_TOKEN" \
               -H "Content-Type: application/json" \
-              -d "{\"title\":\"$PR_TITLE\",\"body\":\"$(echo -e "$PR_BODY\")\",\"head\":\"$BRANCH_NAME\",\"base\":\"main\"}" \
+              -d "{\"title\":\"$PR_TITLE\",\"body\":\"$(echo -e "$PR_BODY")\",\"head\":\"$BRANCH_NAME\",\"base\":\"main\"}" \
               "$API_URL/repos/$REPO/pulls"
             EXISTING_PR=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
               "$API_URL/repos/$REPO/pulls?state=open&head=$BRANCH_NAME" | jq -r '.[0].number // empty')
