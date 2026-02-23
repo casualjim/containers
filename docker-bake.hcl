@@ -186,7 +186,7 @@ target "bun-builder" {
   inherits = ["chisel-common"]
   context  = "."
   args = {
-    EXTRA_PACKAGES       = "libstdc++6_libs libgcc-s1_libs libssl3t64_libs zlib1g_libs openssl_bins"
+    EXTRA_PACKAGES       = "libstdc++6_libs libgcc-s1_libs libssl3t64_libs zlib1g_libs openssl_bins bash_bins coreutils_bins"
     POST_INSTALL_SCRIPT  = "install-bun.sh"
   }
   # Don't create tags for this internal builder
@@ -231,6 +231,7 @@ EOD
 target "fission-bun" {
   dockerfile-inline = <<EOD
 FROM bun-builder
+SHELL ["/usr/bin/bash", "-euo", "pipefail", "-c"]
 USER root
 WORKDIR /app
 COPY fission-bun/ /app/
