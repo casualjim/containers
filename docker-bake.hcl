@@ -11,11 +11,11 @@ variable "REGISTRY" {
 }
 
 variable "RUST_VERSION" {
-  default = "1.93.0"
+  default = "1.93.1"
 }
 
 variable "BUN_VERSION" {
-  default = "1.3.9"
+  default = "1.3.10"
 }
 
 variable "TAG" {
@@ -27,11 +27,11 @@ variable "BUILD_NUMBER" {
 }
 
 variable "OPENBAO_VERSION" {
-  default = "2.5.0"
+  default = "2.5.1"
 }
 
 variable "OPENBAO_CLOUDFLARE_PLUGIN_VERSION" {
-  default = "0.2.1"
+  default = "0.1.4"
 }
 
 variable "OPENBAO_CLICKHOUSE_PLUGIN_REF" {
