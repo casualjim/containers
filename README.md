@@ -16,7 +16,6 @@ Images published by CI to GHCR:
 - `ghcr.io/casualjim/bun:latest`
 - `ghcr.io/casualjim/sqlx-cli:latest`
 - `ghcr.io/casualjim/rust-builder:latest`
-- `ghcr.io/casualjim/openbao:latest`
 - `ghcr.io/casualjim/netdebug:latest`
 
 ### static
@@ -156,17 +155,6 @@ Comprehensive Rust development and build container with LLVM/Clang toolchain.
   - OpenSSL development libraries
   - Ladybug graph database (library + CLI + headers)
 
-### openbao
-OpenBao image with bundled Cloudflare and ClickHouse database plugins.
-
-- **Base**: `openbao/openbao:2.5.0`
-- **Repository**: `ghcr.io/casualjim/openbao:latest`
-- **Features**:
-  - `vault-plugin-secrets-cloudflare`
-  - `vault-plugin-database-clickhouse`
-  - Plugin checksum files included in `/openbao/plugins/`
-  - Plugin metadata labels for version/ref and SHA256 values
-
 ### netdebug
 Network debugging and troubleshooting toolkit for containerized environments.
 
@@ -179,7 +167,7 @@ Network debugging and troubleshooting toolkit for containerized environments.
   - **Connectivity testing**: ping, traceroute, mtr, netcat, socat, arping, telnet
   - **DNS tools**: dig, nslookup, host, dnsutils
   - **Database clients**: postgresql-client-18 (psql), redis-tools (redis-cli), clickhouse-client
-  - **Platform/service CLIs**: kubectl, nats CLI, OpenBao CLI (`bao`/`openbao`), grpcurl
+  - **Platform/service CLIs**: kubectl, nats CLI, grpcurl
   - **HTTP/SSL**: curl, openssl, ca-certificates
   - **Network monitoring/scanning**: nmap, iperf3, iftop, nethogs, conntrack, ethtool, bridge-utils
   - **Legacy tools**: net-tools (netstat, ifconfig), inetutils-traceroute
@@ -208,7 +196,6 @@ docker buildx bake bun
 docker buildx bake fission-bun
 docker buildx bake sqlx-cli
 docker buildx bake rustbuilder
-docker buildx bake openbao
 docker buildx bake netdebug
 ```
 

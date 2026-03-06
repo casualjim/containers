@@ -10,8 +10,6 @@ Version update workflow:
 Managed values in `docker-bake.hcl`:
 - `RUST_VERSION`
 - `BUN_VERSION`
-- `OPENBAO_VERSION`
-- `OPENBAO_CLOUDFLARE_PLUGIN_VERSION`
 
 ### Schedule
 
@@ -24,8 +22,6 @@ Managed values in `docker-bake.hcl`:
    - Uses reusable scripts in `scripts/` directory
    - Queries the latest stable Rust version from the official Rust stable channel
    - Queries the latest stable Bun release from GitHub (excludes pre-releases)
-   - Queries the latest OpenBao release
-   - Queries the latest Cloudflare plugin release
    
 2. **Change Detection**
    - Compares fetched versions with current versions in `docker-bake.hcl`
@@ -56,16 +52,10 @@ The workflow uses reusable shell scripts in the `scripts/` directory:
 
 - `get-rust-version.sh` - Fetches latest Rust version
 - `get-bun-version.sh` - Fetches latest Bun version
-- `get-openbao-version.sh` - Fetches latest OpenBao version
-- `get-cloudflare-plugin-version.sh` - Fetches latest Cloudflare plugin version
 - `get-current-rust-version.sh` - Extracts current Rust version from docker-bake.hcl
 - `get-current-bun-version.sh` - Extracts current Bun version from docker-bake.hcl
-- `get-current-openbao-version.sh` - Extracts current OpenBao version from docker-bake.hcl
-- `get-current-cloudflare-plugin-version.sh` - Extracts current Cloudflare plugin version from docker-bake.hcl
 - `update-rust-version.sh` - Updates Rust version in docker-bake.hcl
 - `update-bun-version.sh` - Updates Bun version in docker-bake.hcl
-- `update-openbao-version.sh` - Updates OpenBao version in docker-bake.hcl
-- `update-cloudflare-plugin-version.sh` - Updates Cloudflare plugin version in docker-bake.hcl
 
 This ensures the same logic is used by:
 - Production workflow (`.forgejo/workflows/update-versions.yml`)
@@ -85,8 +75,6 @@ No manual intervention is required. However, you can:
 
 - **Rust**: https://static.rust-lang.org/dist/channel-rust-stable.toml
 - **Bun**: https://api.github.com/repos/oven-sh/bun/releases
-- **OpenBao**: https://api.github.com/repos/openbao/openbao/releases/latest
-- **Cloudflare plugin**: https://api.github.com/repos/bloominlabs/vault-plugin-secrets-cloudflare/releases/latest
 
 ### Extending
 

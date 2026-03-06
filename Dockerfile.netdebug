@@ -3,7 +3,6 @@ ARG UMBER_VERSION=v0.5.0
 ARG KUBECTL_VERSION=v1.35.1
 ARG NATSCLI_VERSION=0.3.1
 ARG GRPCURL_VERSION=1.9.3
-ARG OPENBAO_VERSION=2.5.0
 ARG CLICKHOUSE_VERSION=26.1.2.11
 
 # Stage 1: Download umber binary
@@ -35,7 +34,7 @@ ARG UBUNTU_RELEASE
 ARG KUBECTL_VERSION
 ARG NATSCLI_VERSION
 ARG GRPCURL_VERSION
-ARG OPENBAO_VERSION
+
 ARG CLICKHOUSE_VERSION
 
 # Avoid interactive prompts during package installation
@@ -48,8 +47,8 @@ COPY --from=umber-downloader /usr/local/bin/umber /usr/local/bin/umber
 RUN apt-get update -yq && \
     apt-get install -yqq --no-install-recommends ca-certificates curl gnupg && \
     case "$TARGETARCH" in \
-      amd64) KUBECTL_ARCH="amd64"; NATS_ARCH="amd64"; GRPCURL_ARCH="amd64"; OPENBAO_ARCH="x86_64"; CLICKHOUSE_ARCH="amd64"; POSTGRES_CLIENT_PACKAGE="postgresql-client-18" ;; \
-      arm64) KUBECTL_ARCH="arm64"; NATS_ARCH="arm64"; GRPCURL_ARCH="arm64"; OPENBAO_ARCH="arm64"; CLICKHOUSE_ARCH="arm64"; POSTGRES_CLIENT_PACKAGE="postgresql-client" ;; \
+      amd64) KUBECTL_ARCH="amd64"; NATS_ARCH="amd64"; GRPCURL_ARCH="amd64"; CLICKHOUSE_ARCH="amd64"; POSTGRES_CLIENT_PACKAGE="postgresql-client-18" ;; \
+      arm64) KUBECTL_ARCH="arm64"; NATS_ARCH="arm64"; GRPCURL_ARCH="arm64"; CLICKHOUSE_ARCH="arm64"; POSTGRES_CLIENT_PACKAGE="postgresql-client" ;; \
       *) echo "Unsupported architecture: $TARGETARCH"; exit 1 ;; \
     esac && \
     if [ "$TARGETARCH" = "amd64" ]; then \
@@ -121,12 +120,6 @@ RUN apt-get update -yq && \
       "https://packages.clickhouse.com/deb/pool/main/c/clickhouse/clickhouse-client_${CLICKHOUSE_VERSION}_${CLICKHOUSE_ARCH}.deb" \
       -o /tmp/clickhouse-client.deb && \
     apt-get install -yqq --no-install-recommends /tmp/clickhouse-common-static.deb /tmp/clickhouse-client.deb && \
-    curl -fsSL \
-      "https://github.com/openbao/openbao/releases/download/v${OPENBAO_VERSION}/bao_${OPENBAO_VERSION}_Linux_${OPENBAO_ARCH}.tar.gz" \
-      -o /tmp/bao.tar.gz && \
-    tar -xzf /tmp/bao.tar.gz -C /tmp && \
-    install -m 0755 /tmp/bao /usr/local/bin/bao && \
-    ln -sf /usr/local/bin/bao /usr/local/bin/openbao && \
     rm -f /etc/apt/sources.list.d/pgdg.list && \
     rm -f /etc/apt/keyrings/pgdg.gpg && \
     apt-get clean -y && \

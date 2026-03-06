@@ -144,3 +144,10 @@ ENV CXXFLAGS=-stdlib=libc++ \
   LBUG_SHARED=1
 
 COPY --from=rustbuilder / /
+
+# Set bash as default shell
+SHELL ["/bin/bash", "-c"]
+ENV SHELL=/bin/bash
+
+# Default to bash for interactive use
+CMD ["/bin/bash"]

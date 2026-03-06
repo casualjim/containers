@@ -26,22 +26,6 @@ variable "BUILD_NUMBER" {
   default = "local"
 }
 
-variable "OPENBAO_VERSION" {
-  default = "2.5.0"
-}
-
-variable "OPENBAO_CLOUDFLARE_PLUGIN_VERSION" {
-  default = "0.2.1"
-}
-
-variable "OPENBAO_CLICKHOUSE_PLUGIN_REF" {
-  default = "a8e2ab243ae71daf0ffd942677ba4a7bce4e4f0c"
-}
-
-variable "OPENBAO_CLICKHOUSE_PLUGIN_SHA256" {
-  default = ""
-}
-
 variable "LADYBUG_VERSION" {
   default = "v0.14.1"
 }
@@ -274,25 +258,8 @@ target "rustbuilder" {
   }
 }
 
-target "openbao" {
-  dockerfile = "Dockerfile.openbao"
-  context    = "."
-  platforms  = ["linux/amd64", "linux/arm64"]
-  args = {
-    OPENBAO_VERSION            = OPENBAO_VERSION
-    CLOUDFLARE_PLUGIN_VERSION  = OPENBAO_CLOUDFLARE_PLUGIN_VERSION
-    CLICKHOUSE_PLUGIN_REF      = OPENBAO_CLICKHOUSE_PLUGIN_REF
-    CLICKHOUSE_PLUGIN_SHA256   = OPENBAO_CLICKHOUSE_PLUGIN_SHA256
-  }
-  tags = [
-    "${REGISTRY}/openbao:${OPENBAO_VERSION}",
-    "${REGISTRY}/openbao:${OPENBAO_VERSION}-${BUILD_NUMBER}",
-    "${REGISTRY}/openbao:latest",
-  ]
-}
-
 # netdebug: Network debugging and troubleshooting toolkit
-# Includes: tcpdump, ngrep, nmap, curl, psql(18), redis-cli, kubectl, nats, bao/openbao, clickhouse-client, grpcurl, jq, ripgrep, eza, umber and more
+# Includes: tcpdump, ngrep, nmap, curl, psql(18), redis-cli, kubectl, nats, clickhouse-client, grpcurl, jq, ripgrep, eza, umber and more
 # Designed for debugging network issues in containerized environments
 # Runs as root for full network interface access
 # Note: This image is larger than chisel-based images due to full Ubuntu base
@@ -316,5 +283,5 @@ target "netdebug" {
 
 # Group to build all images
 group "default" {
-  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "fission-bun", "rustbuilder", "openbao", "netdebug"]
+  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "fission-bun", "rustbuilder", "netdebug"]
 }
