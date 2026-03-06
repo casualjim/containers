@@ -15,7 +15,6 @@ permissions:
 jobs:
   build:
     runs-on:
-      - docker
       - linux
       - amd64
     container: ghcr.io/casualjim/rust-builder:24.04-1.93.0-1.3.9-18
