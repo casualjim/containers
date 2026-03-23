@@ -101,8 +101,10 @@ jobs:
       - name: Create or update PR
         if: steps.check-updates.outputs.update_needed == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
+
           git config user.name "forgejo-actions[bot]"
           git config user.email "forgejo-actions[bot]@noreply.wagyu.icu"
 
@@ -131,28 +133,28 @@ jobs:
           REPO="${{ github.repository }}"
 
           # Check for existing PR
-          EXISTING_PR=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+          EXISTING_PR=$(curl --fail-with-body -fsS -H "Authorization: token $GITHUB_TOKEN" \
             "$API_URL/repos/$REPO/pulls?state=open&head=$BRANCH_NAME" | jq -r '.[0].number // empty')
 
           if [ -n "$EXISTING_PR" ]; then
             # Update existing PR
-            curl -s -X PATCH -H "Authorization: token $GITHUB_TOKEN" \
+            curl --fail-with-body -fsS -X PATCH -H "Authorization: token $GITHUB_TOKEN" \
               -H "Content-Type: application/json" \
               -d "{\"title\":\"$PR_TITLE\",\"body\":\"$(echo -e "$PR_BODY")\"}" \
               "$API_URL/repos/$REPO/pulls/$EXISTING_PR"
           else
             # Create new PR
-            curl -s -X POST -H "Authorization: token $GITHUB_TOKEN" \
+            curl --fail-with-body -fsS -X POST -H "Authorization: token $GITHUB_TOKEN" \
               -H "Content-Type: application/json" \
               -d "{\"title\":\"$PR_TITLE\",\"body\":\"$(echo -e "$PR_BODY")\",\"head\":\"$BRANCH_NAME\",\"base\":\"main\"}" \
               "$API_URL/repos/$REPO/pulls"
-            EXISTING_PR=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            EXISTING_PR=$(curl --fail-with-body -fsS -H "Authorization: token $GITHUB_TOKEN" \
               "$API_URL/repos/$REPO/pulls?state=open&head=$BRANCH_NAME" | jq -r '.[0].number // empty')
           fi
 
           if [ -n "$EXISTING_PR" ]; then
             # Schedule auto-merge with squash (Forgejo API)
-            curl -s -X POST -H "Authorization: token $GITHUB_TOKEN" \
+            curl --fail-with-body -fsS -X POST -H "Authorization: token $GITHUB_TOKEN" \
               -H "Content-Type: application/json" \
               -d '{"merge_method":"squash"}' \
               "$API_URL/repos/$REPO/pulls/$EXISTING_PR/auto_merge"
