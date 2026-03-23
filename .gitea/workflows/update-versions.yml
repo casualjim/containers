@@ -109,7 +109,7 @@ jobs:
           git config user.email "forgejo-actions[bot]@noreply.wagyu.icu"
 
           BRANCH_NAME="bot/version-bump"
-          git checkout -b "$BRANCH_NAME" || git checkout "$BRANCH_NAME"
+          git checkout -B "$BRANCH_NAME"
 
           git add docker-bake.hcl README.md
 
@@ -133,29 +133,29 @@ jobs:
           REPO="${{ github.repository }}"
 
           # Check for existing PR
-          EXISTING_PR=$(curl --fail-with-body -fsS -H "Authorization: token $GITHUB_TOKEN" \
+          EXISTING_PR=$(curl --fail-with-body -sS -H "Authorization: token $GITHUB_TOKEN" \
             "$API_URL/repos/$REPO/pulls?state=open&head=$BRANCH_NAME" | jq -r '.[0].number // empty')
 
           if [ -n "$EXISTING_PR" ]; then
             # Update existing PR
-            curl --fail-with-body -fsS -X PATCH -H "Authorization: token $GITHUB_TOKEN" \
+            curl --fail-with-body -sS -X PATCH -H "Authorization: token $GITHUB_TOKEN" \
               -H "Content-Type: application/json" \
               -d "{\"title\":\"$PR_TITLE\",\"body\":\"$(echo -e "$PR_BODY")\"}" \
               "$API_URL/repos/$REPO/pulls/$EXISTING_PR"
           else
             # Create new PR
-            curl --fail-with-body -fsS -X POST -H "Authorization: token $GITHUB_TOKEN" \
+            curl --fail-with-body -sS -X POST -H "Authorization: token $GITHUB_TOKEN" \
               -H "Content-Type: application/json" \
               -d "{\"title\":\"$PR_TITLE\",\"body\":\"$(echo -e "$PR_BODY")\",\"head\":\"$BRANCH_NAME\",\"base\":\"main\"}" \
               "$API_URL/repos/$REPO/pulls"
-            EXISTING_PR=$(curl --fail-with-body -fsS -H "Authorization: token $GITHUB_TOKEN" \
+            EXISTING_PR=$(curl --fail-with-body -sS -H "Authorization: token $GITHUB_TOKEN" \
               "$API_URL/repos/$REPO/pulls?state=open&head=$BRANCH_NAME" | jq -r '.[0].number // empty')
           fi
 
           if [ -n "$EXISTING_PR" ]; then
-            # Schedule auto-merge with squash (Forgejo API)
-            curl --fail-with-body -fsS -X POST -H "Authorization: token $GITHUB_TOKEN" \
+            # Schedule auto-merge with merge commit (Forgejo API)
+            curl --fail-with-body -sS -X POST -H "Authorization: token $GITHUB_TOKEN" \
               -H "Content-Type: application/json" \
-              -d '{"merge_method":"squash"}' \
+              -d '{"merge_method":"merge"}' \
               "$API_URL/repos/$REPO/pulls/$EXISTING_PR/auto_merge"
           fi

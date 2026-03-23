@@ -24,16 +24,26 @@ RUN tar -xvf chisel.tar.gz -C /usr/bin/
 COPY chisel-releases /opt/chisel-releases
 
 RUN mkdir /staging-rootfs \
-  && chisel cut --release /opt/chisel-releases --root /staging-rootfs \
-  base-files_base \
-  base-files_release-info \
-  base-files_chisel \
-  base-passwd_data \
-  ca-certificates_data \
-  tzdata_base \
-  tzdata_zoneinfo \
-  media-types_data \
-  ${EXTRA_PACKAGES}
+  && for attempt in 1 2 3; do \
+    if chisel cut --release /opt/chisel-releases --root /staging-rootfs \
+      base-files_base \
+      base-files_release-info \
+      base-files_chisel \
+      base-passwd_data \
+      ca-certificates_data \
+      tzdata_base \
+      tzdata_zoneinfo \
+      media-types_data \
+      ${EXTRA_PACKAGES}; then \
+      break; \
+    fi; \
+    if [ "$attempt" -eq 3 ]; then \
+      exit 1; \
+    fi; \
+    echo "chisel cut failed on attempt $attempt, retrying..."; \
+    rm -rf /staging-rootfs/*; \
+    sleep $((attempt * 5)); \
+  done
 
 RUN echo 'appuser:x:10001:10001::/home/appuser:/sbin/nologin' >> /staging-rootfs/etc/passwd \
   && echo 'appuser:x:10001:' >> /staging-rootfs/etc/group \
