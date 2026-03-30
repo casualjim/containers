@@ -153,9 +153,9 @@ jobs:
           fi
 
           if [ -n "$EXISTING_PR" ]; then
-            # Schedule auto-merge with merge commit (Forgejo API)
+            # Schedule auto-merge with merge commit (Gitea API)
             curl --fail-with-body -sS -X POST -H "Authorization: token $BUILDER_FORGEJO_TOKEN" \
               -H "Content-Type: application/json" \
-              -d '{"merge_method":"merge"}' \
-              "$API_URL/repos/$REPO/pulls/$EXISTING_PR/auto_merge"
+              -d '{"Do":"merge","merge_when_checks_succeed":true}' \
+              "$API_URL/repos/$REPO/pulls/$EXISTING_PR/merge"
           fi
