@@ -128,7 +128,7 @@ jobs:
 
           PR_TITLE="chore: update ${UPDATES[*]}"
 
-          # Use Forgejo API to create/update PR
+          # Use Gitea API to create/update PR
           API_URL="${{ github.api_url }}"
           REPO="${{ github.repository }}"
 
