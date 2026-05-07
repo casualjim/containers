@@ -32,7 +32,7 @@ First, determine which Ubuntu package provides the functionality you need.
 ### Search for packages:
 ```bash
 # In a running Ubuntu container
-docker run --rm -it ubuntu:25.10 bash
+docker run --rm -it ubuntu:26.04 bash
 
 # Inside the container:
 apt-get update
@@ -65,18 +65,18 @@ apt-get download <package-name>
 dpkg --contents <package-name>*.deb
 ```
 
-### Example for libc++1-20:
+### Example for libc++abi1:
 ```bash
-apt-get download libc++1-20
-dpkg --contents libc++1-20*.deb
+apt-get download libc++abi1
+dpkg --contents libc++abi1*.deb
 
 # Output shows:
-# -rw-r--r-- root/root 1124048 2025-08-17 07:08 ./usr/lib/llvm-20/lib/libc++.so.1.0.20
-# lrwxrwxrwx root/root       0 2025-08-17 07:08 ./usr/lib/aarch64-linux-gnu/libc++.so.1.0.20 -> ../llvm-20/lib/libc++.so.1.0.20
+# -rw-r--r-- root/root 1124048 2025-08-17 07:08 ./usr/lib/*-linux-gnu/libc++.so.1*
+# lrwxrwxrwx root/root       0 2025-08-17 07:08 ./usr/lib/aarch64-linux-gnu/libc++.so.1.0.20 -> ../llvm-22/lib/libc++.so.1.0.20
 ```
 
 **Key observations:**
-- The actual library file is in `/usr/lib/llvm-20/lib/`
+- The actual library file is in ``
 - There's a symlink in `/usr/lib/*-linux-gnu/` (arch-specific)
 - You need to include both the file and symlink
 
@@ -90,15 +90,15 @@ apt-cache depends <package-name>
 apt-cache depends --recurse --no-recommends --no-suggests --no-conflicts --no-breaks --no-replaces --no-enhances <package-name>
 ```
 
-### Example for libc++1-20:
+### Example for libc++abi1:
 ```bash
-apt-cache depends libc++1-20
+apt-cache depends libc++abi1
 
 # Output:
-# libc++1-20
-#   Depends: libc++abi1-20 (>= 1:20.1.8)
+# libc++abi1
+#   Depends: libc++abi1 (>= 1:20.1.8)
 #   Depends: libc6 (>= 2.38)
-#   Depends: libunwind-20 (>= 1:20.1.8)
+#   Depends: llvm-libunwind1 (>= 1:20.1.8)
 ```
 
 **Important:** You'll need to create slices for all dependencies that aren't already in upstream chisel-releases.
@@ -140,59 +140,59 @@ slices:
     - Use `*` for wildcards (matches any characters)
     - Paths can be globs but must match actual package contents
 
-### Example: libc++1-20.yaml
+### Example: libc++abi1.yaml
 ```yaml
-package: libc++1-20
+package: libc++abi1
 
 essential:
-  - libc++1-20_copyright
+  - libc++abi1_copyright
 
 slices:
   libs:
     essential:
-      - libc++abi1-20_libs
+      - libc++abi1_libs
       - libc6_libs
-      - libunwind-20_libs
+      - llvm-libunwind1_libs
     contents:
-      /usr/lib/llvm-20/lib/libc++.so.1.0.20:
+      /usr/lib/*-linux-gnu/libc++.so.1*:
       /usr/lib/*-linux-gnu/libc++.so.1.0.20:
 
   copyright:
     contents:
-      /usr/share/doc/libc++1-20/copyright:
+      /usr/share/doc/libc++abi1/copyright:
 ```
 
 ### Create dependent slices:
 
 If your package depends on other packages not in upstream, create slices for those too.
 
-**libc++abi1-20.yaml:**
+**libc++abi1.yaml:**
 ```yaml
-package: libc++abi1-20
+package: libc++abi1
 
 essential:
-  - libc++abi1-20_copyright
+  - libc++abi1_copyright
 
 slices:
   libs:
     essential:
       - libc6_libs
-      - libunwind-20_libs
+      - llvm-libunwind1_libs
     contents:
-      /usr/lib/llvm-20/lib/libc++abi.so.1.0.20:
+      /usr/lib/*-linux-gnu/libc++abi.so.1*:
       /usr/lib/*-linux-gnu/libc++abi.so.1.0.20:
 
   copyright:
     contents:
-      /usr/share/doc/libc++abi1-20/copyright:
+      /usr/share/doc/libc++abi1/copyright:
 ```
 
-**libunwind-20.yaml:**
+**llvm-libunwind1.yaml:**
 ```yaml
-package: libunwind-20
+package: llvm-libunwind1
 
 essential:
-  - libunwind-20_copyright
+  - llvm-libunwind1_copyright
 
 slices:
   libs:
@@ -200,12 +200,12 @@ slices:
       - libc6_libs
       - libgcc-s1_libs
     contents:
-      /usr/lib/llvm-20/lib/libunwind.so.1.0.20:
+      /usr/lib/*-linux-gnu/libunwind.so.1*:
       /usr/lib/*-linux-gnu/libunwind.so.1.0.20:
 
   copyright:
     contents:
-      /usr/share/doc/libunwind-20/copyright:
+      /usr/share/doc/llvm-libunwind1/copyright:
 ```
 
 ### Create a meta-package (optional):
@@ -219,10 +219,10 @@ package: libc++1
 slices:
   libs:
     essential:
-      - libc++1-20_libs
+      - libc++abi1_libs
 ```
 
-This allows users to reference `libc++1_libs` instead of `libc++1-20_libs`.
+This allows users to reference `libc++1_libs` instead of `libc++abi1_libs`.
 
 ## Step 5: Update the Sync Script
 
@@ -234,9 +234,8 @@ Add your custom packages to the sync script so they're preserved during upstream
 # Find the CUSTOM_PACKAGES array and add your packages
 CUSTOM_PACKAGES=(
   "libc++1"
-  "libc++1-20"
-  "libc++abi1-20"
-  "libunwind-20"
+  "libc++abi1"
+  "llvm-libunwind1"
   "your-new-package"        # Add your package here
   "your-new-package-deps"   # And its dependencies
 )
@@ -336,34 +335,33 @@ Here's the complete example of how we added libc++ support:
 ### 1. Identified packages:
 ```bash
 apt-cache search "libc++"
-# Found: libc++1, libc++1-20, libc++abi1-20, libunwind-20
+# Found: libc++1, libc++abi1, libc++abi1, llvm-libunwind1
 ```
 
 ### 2. Analyzed contents:
 ```bash
-apt-get download libc++1-20 libc++abi1-20 libunwind-20
+apt-get download libc++abi1 libc++abi1 llvm-libunwind1
 dpkg --contents *.deb | grep "\.so\."
 ```
 
 ### 3. Found dependencies:
 ```bash
-apt-cache depends libc++1-20
-# Depends on: libc++abi1-20, libc6, libunwind-20
+apt-cache depends libc++abi1
+# Depends on: libc++abi1, libc6, llvm-libunwind1
 ```
 
 ### 4. Created slices:
-- `chisel-releases/slices/libc++1-20.yaml`
-- `chisel-releases/slices/libc++abi1-20.yaml`
-- `chisel-releases/slices/libunwind-20.yaml`
+- `chisel-releases/slices/libc++abi1.yaml`
+- `chisel-releases/slices/libc++abi1.yaml`
+- `chisel-releases/slices/llvm-libunwind1.yaml`
 - `chisel-releases/slices/libc++1.yaml` (meta-package)
 
 ### 5. Updated sync script:
 ```bash
 CUSTOM_PACKAGES=(
   "libc++1"
-  "libc++1-20"
-  "libc++abi1-20"
-  "libunwind-20"
+  "libc++abi1"
+  "llvm-libunwind1"
 )
 ```
 
@@ -423,7 +421,7 @@ contents:
 
 # Correct - matches actual package contents
 contents:
-  /usr/lib/llvm-20/lib/libc++.so.1.0.20:
+  /usr/lib/*-linux-gnu/libc++.so.1*:
   /usr/lib/*-linux-gnu/libc++.so.1.0.20:
 ```
 
@@ -433,7 +431,7 @@ contents:
 
 **Solution:**
 1. Verify package name: `apt-cache search <name>`
-2. Check Ubuntu release: package might not exist in 25.10
+2. Check Ubuntu release: package might not exist in 26.04
 3. Ensure correct spelling and version suffix
 
 ### Error: "slice not found"
@@ -489,7 +487,7 @@ CUSTOM_PACKAGES=(
 2. **Match patterns carefully**: Use `dpkg --contents` to verify paths
 3. **Test incrementally**: Build after each slice addition
 4. **Document dependencies**: Comment why each dependency is needed
-5. **Version carefully**: Use specific version packages (e.g., `libc++1-20`) in slices, meta-packages for convenience
+5. **Version carefully**: Use specific version packages (e.g., `libc++abi1`) in slices, meta-packages for convenience
 6. **Preserve copyrights**: Always include the copyright slice
 7. **Check symlinks**: Include both actual files and their symlinks
 8. **Validate with dive**: Use `dive` to inspect the final image

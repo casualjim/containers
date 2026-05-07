@@ -13,7 +13,7 @@ A **rigid** 7-step process for adding custom chisel slice definitions for Ubuntu
 
 **IMPORTANT:** All `apt` and `dpkg` commands must run inside an Ubuntu container:
 ```bash
-docker run --rm -it ubuntu:25.10 bash
+docker run --rm -it ubuntu:26.04 bash
 ```
 
 ## Checklist (Mandatory)
@@ -77,7 +77,7 @@ slices:
       - <dependency-package>_libs
       - libc6_libs
     contents:
-      /usr/lib/llvm-20/lib/libfoo.so.1.0:
+      /usr/lib/*-linux-gnu/libfoo.so.1.0:
       /usr/lib/*-linux-gnu/libfoo.so.1.0:
 
   copyright:
@@ -169,12 +169,11 @@ For detailed examples and troubleshooting, see `docs/adding-custom-slices.md`.
 
 ## Example: libc++ Slices
 
-Created 4 files for LLVM C++ standard library support:
+Created 3 files for LLVM C++ standard library support:
 
-1. `libc++1-20.yaml` — Main library
-2. `libc++abi1-20.yaml` — ABI support
-3. `libunwind-20.yaml` — Stack unwinding
-4. `libc++1.yaml` — Meta-package for convenience
+1. `libc++abi1.yaml` — ABI support
+2. `llvm-libunwind1.yaml` — Stack unwinding
+3. `libc++1.yaml` — Meta-package for convenience
 
 Each follows the pattern: package name, essential copyright, libs slice with dependencies and file paths.
 
