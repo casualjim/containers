@@ -1,9 +1,9 @@
 variable "UBUNTU_RELEASE" {
-  default = "25.10"
+  default = "26.04"
 }
 
 variable "CHISEL_VERSION" {
-  default = "v1.2.0"
+  default = "v1.4.1"
 }
 
 variable "REGISTRY" {

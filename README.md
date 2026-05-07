@@ -21,14 +21,14 @@ Images published by CI to GHCR:
 ### static
 Minimal base image with no extra packages, designed for static applications and Go binaries that don't require additional system libraries.
 
-- **Base**: Chiseled Ubuntu 25.10
+- **Base**: Chiseled Ubuntu 26.04
 - **Repository**: `ghcr.io/casualjim/bare:static`
 - **User**: `ubuntu` (non-root)
 
 ### libc
 Base image with GNU C++ standard library support, suitable for applications requiring `libstdc++6`.
 
-- **Base**: Chiseled Ubuntu 25.10
+- **Base**: Chiseled Ubuntu 26.04
 - **Repository**: `ghcr.io/casualjim/bare:libc`
 - **User**: `ubuntu` (non-root)
 - **Extra packages**: `libstdc++6_libs`
@@ -36,7 +36,7 @@ Base image with GNU C++ standard library support, suitable for applications requ
 ### libc-ssl
 Base image with GNU C++ standard library and OpenSSL 3 support.
 
-- **Base**: Chiseled Ubuntu 25.10
+- **Base**: Chiseled Ubuntu 26.04
 - **Repository**: `ghcr.io/casualjim/bare:libc-ssl`
 - **User**: `ubuntu` (non-root)
 - **Extra packages**: `libstdc++6_libs`, `libssl3t64_libs`
@@ -44,15 +44,15 @@ Base image with GNU C++ standard library and OpenSSL 3 support.
 ### libcxx
 Base image with LLVM C++ standard library support, suitable for applications compiled with Clang/LLVM.
 
-- **Base**: Chiseled Ubuntu 25.10
+- **Base**: Chiseled Ubuntu 26.04
 - **Repository**: `ghcr.io/casualjim/bare:libcxx`
 - **User**: `ubuntu` (non-root)
-- **Extra packages**: `libc++1_libs` (includes `libc++abi1-20` and `libunwind-20`)
+- **Extra packages**: `libc++1_libs` (includes `libc++abi1` and `llvm-libunwind1`)
 
 ### libcxx-ssl
 Base image with LLVM C++ standard library and OpenSSL 3 support.
 
-- **Base**: Chiseled Ubuntu 25.10
+- **Base**: Chiseled Ubuntu 26.04
 - **Repository**: `ghcr.io/casualjim/bare:libcxx-ssl`
 - **User**: `ubuntu` (non-root)
 - **Extra packages**: `libc++1_libs`, `libssl3t64_libs`
@@ -60,7 +60,7 @@ Base image with LLVM C++ standard library and OpenSSL 3 support.
 ### libcxx-ssl-tesseract
 Base image with LLVM C++ standard library, OpenSSL 3, and Tesseract OCR with all language packs.
 
-- **Base**: Chiseled Ubuntu 25.10
+- **Base**: Chiseled Ubuntu 26.04
 - **Repository**: `ghcr.io/casualjim/bare:libcxx-ssl-tesseract`
 - **User**: `ubuntu` (non-root)
 - **Extra packages**: `libc++1_libs`, `libssl3t64_libs`, `bash_bins`
@@ -73,7 +73,7 @@ Base image with LLVM C++ standard library, OpenSSL 3, and Tesseract OCR with all
 ### libcxx-ssl-ladybug
 Base image with LLVM C++ standard library, OpenSSL 3, and Ladybug graph database shared library.
 
-- **Base**: Chiseled Ubuntu 25.10
+- **Base**: Chiseled Ubuntu 26.04
 - **Repository**: `ghcr.io/casualjim/bare:libcxx-ssl-ladybug`
 - **User**: `appuser` (UID 10001, non-root)
 - **Ladybug Version**: v0.14.1
@@ -86,7 +86,7 @@ Base image with LLVM C++ standard library, OpenSSL 3, and Ladybug graph database
 ### lbug-cli
 Ladybug CLI container with common tools for database management.
 
-- **Base**: Chiseled Ubuntu 25.10
+- **Base**: Chiseled Ubuntu 26.04
 - **Repository**: `ghcr.io/casualjim/lbug-cli:latest`
 - **User**: `appuser` (UID 10001, non-root)
 - **Ladybug Version**: v0.14.1
@@ -100,7 +100,7 @@ Ladybug CLI container with common tools for database management.
 ### bun
 Bun runtime container with full Node.js compatibility and SSL support.
 
-- **Base**: Chiseled Ubuntu 25.10
+- **Base**: Chiseled Ubuntu 26.04
 - **Repository**: `ghcr.io/casualjim/bun:latest`
 - **User**: `appuser` (UID 10001, non-root)
 - **Bun Version**: 1.3.13
@@ -115,7 +115,7 @@ Bun runtime container with full Node.js compatibility and SSL support.
 ### fission-bun
 Fission Bun environment runtime target.
 
-- **Base**: `bun-builder` target (Chiseled Ubuntu 25.10)
+- **Base**: `bun-builder` target (Chiseled Ubuntu 26.04)
 - **Repository**: `ghcr.io/casualjim/fission-bun:latest`
 - **User**: `appuser` (UID 10001, non-root)
 - **Note**: Build target exists in `docker-bake.hcl`, but it is not currently pushed by the default CI build workflows.
@@ -211,9 +211,8 @@ docker buildx bake --set "bun.args.BUN_VERSION=latest"
 This repository includes custom chisel slice definitions for packages not yet available in the upstream [canonical/chisel-releases](https://github.com/canonical/chisel-releases) repository:
 
 - `libc++1` - LLVM C++ Standard library (metapackage)
-- `libc++1-20` - LLVM C++ Standard library (version 20)
-- `libc++abi1-20` - LLVM C++ ABI support library
-- `libunwind-20` - LLVM stack unwinding library
+- `libc++abi1` - LLVM C++ ABI support library
+- `llvm-libunwind1` - LLVM stack unwinding library
 
 **Want to add more packages?** See the [Adding Custom Chisel Slices](docs/adding-custom-slices.md) runbook for a detailed step-by-step guide.
 
@@ -307,9 +306,9 @@ To see available chisel packages for your Ubuntu release:
 ls chisel-releases/slices/
 
 # Or query upstream directly
-wget https://github.com/canonical/chisel/releases/download/v1.2.0/chisel_v1.2.0_linux_amd64.tar.gz
-tar -xzf chisel_v1.2.0_linux_amd64.tar.gz
-./chisel find --release ubuntu-25.10
+wget https://github.com/canonical/chisel/releases/download/v1.4.1/chisel_v1.4.1_linux_amd64.tar.gz
+tar -xzf chisel_v1.4.1_linux_amd64.tar.gz
+./chisel find --release ubuntu-26.04
 ```
 
 ## Workflow

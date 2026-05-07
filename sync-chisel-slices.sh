@@ -4,7 +4,7 @@ set -euo pipefail
 # Script to sync chisel slices from upstream canonical/chisel-releases
 # and add our custom libc++ slices
 
-UBUNTU_RELEASE="${UBUNTU_RELEASE:-25.10}"
+UBUNTU_RELEASE="${UBUNTU_RELEASE:-26.04}"
 UPSTREAM_REPO="https://github.com/canonical/chisel-releases.git"
 UPSTREAM_BRANCH="ubuntu-${UBUNTU_RELEASE}"
 TEMP_DIR="/tmp/chisel-releases-sync-$$"
@@ -16,7 +16,10 @@ REQUIRED_PACKAGES=(
   "base-files"
   "base-passwd"
   "ca-certificates"
+  "dash"
   "coreutils"
+  "coreutils-from-gnu"
+  "gnu-coreutils"
   "curl"
   "jq"
   "tzdata"
@@ -52,9 +55,8 @@ REQUIRED_PACKAGES=(
 # Custom packages we maintain locally
 CUSTOM_PACKAGES=(
   "libc++1"
-  "libc++1-20"
-  "libc++abi1-20"
-  "libunwind-20"
+  "libc++abi1"
+  "llvm-libunwind1"
 )
 
 echo "==> Cloning upstream chisel-releases (branch: ${UPSTREAM_BRANCH})..."

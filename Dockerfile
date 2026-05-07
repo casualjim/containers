@@ -1,5 +1,5 @@
-ARG UBUNTU_RELEASE=25.10
-ARG CHISEL_VERSION=v1.2.0
+ARG UBUNTU_RELEASE=26.04
+ARG CHISEL_VERSION=v1.4.1
 
 FROM ubuntu:${UBUNTU_RELEASE} AS builder
 
@@ -31,6 +31,7 @@ RUN mkdir /staging-rootfs \
       base-files_chisel \
       base-passwd_data \
       ca-certificates_data \
+      dash_bins \
       tzdata_base \
       tzdata_zoneinfo \
       media-types_data \

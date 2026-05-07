@@ -1,0 +1,17 @@
+package: libc++abi1
+
+essential:
+  libc++abi1_copyright:
+
+slices:
+  libs:
+    essential:
+      libc6_libs:
+      libgcc-s1_libs:
+    contents:
+      /usr/lib/*-linux-gnu/libc++abi.so.1*:
+
+  copyright:
+    contents:
+      /usr/share/doc/libc++abi1/copyright:
+

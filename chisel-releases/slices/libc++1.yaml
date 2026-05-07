@@ -1,6 +1,18 @@
 package: libc++1
 
+essential:
+  libc++1_copyright:
+
 slices:
   libs:
     essential:
-      - libc++1-20_libs
+      libc++abi1_libs:
+      libc6_libs:
+      llvm-libunwind1_libs:
+    contents:
+      /usr/lib/*-linux-gnu/libc++.so.1*:
+
+  copyright:
+    contents:
+      /usr/share/doc/libc++1/copyright:
+
