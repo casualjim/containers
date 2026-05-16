@@ -15,7 +15,7 @@ variable "RUST_VERSION" {
 }
 
 variable "BUN_VERSION" {
-  default = "1.3.13"
+  default = "1.3.14"
 }
 
 variable "TAG" {
