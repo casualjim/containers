@@ -10,8 +10,7 @@ ARG RUST_VERSION
 ARG BUN_VERSION
 ARG LADYBUG_VERSION
 
-# The LLVM version should match the version of rustc being installed.
-# `rustc -vV` shows the LLVM version used.
+# Install Rust first, then derive the matching LLVM/clang major version from `rustc -Vv`.
 
 RUN apt-get update &&\
   apt-get install -y software-properties-common &&\
@@ -39,17 +38,20 @@ RUN apt-get update &&\
     chmod a+r /etc/apt/keyrings/docker.asc && \
     echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
   $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
-  curl -sSL https://apt.llvm.org/llvm.sh | bash -s 21 &&\
-  apt-get install -y libnode-dev npm libc++-dev docker-ce-cli docker-buildx-plugin docker-compose-plugin &&\
+  apt-get update && \
+  apt-get install -y libnode-dev npm docker-ce-cli docker-buildx-plugin docker-compose-plugin &&\
   rm -rf /var/lib/apt/lists/*
 
 ENV CXXFLAGS=-stdlib=libc++ \
-  CC=clang-21 \
-  CXX=clang++-21 \
+  CC=/usr/local/bin/clang \
+  CXX=/usr/local/bin/clang++ \
+  AR=/usr/local/bin/llvm-ar \
+  RANLIB=/usr/local/bin/llvm-ranlib \
+  LLVM_CONFIG=/usr/local/bin/llvm-config \
   CXXSTDLIB=c++ \
   RUSTUP_HOME=/usr/local/rustup \
   CARGO_HOME=/usr/local/cargo \
-  PATH=/usr/local/cargo/bin:$PATH \
+  PATH=/usr/local/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
   RUST_VERSION=${RUST_VERSION}
 
 
@@ -93,6 +95,32 @@ RUN set -eux; \
   cargo --version; \
   rustc --version;
 
+RUN set -eux; \
+  rust_llvm_version="$(rustc -Vv | awk -F': ' '/^LLVM version:/ { print $2 }')"; \
+  llvm_major="${rust_llvm_version%%.*}"; \
+  test -n "$llvm_major"; \
+  echo "rustc uses LLVM ${rust_llvm_version}; installing clang/LLVM ${llvm_major}"; \
+  curl -sSL https://apt.llvm.org/llvm.sh -o /tmp/llvm.sh; \
+  chmod +x /tmp/llvm.sh; \
+  /tmp/llvm.sh "$llvm_major"; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends \
+    clang-${llvm_major} \
+    lld-${llvm_major} \
+    llvm-${llvm_major} \
+    llvm-${llvm_major}-dev \
+    libc++-${llvm_major}-dev \
+    libc++abi-${llvm_major}-dev; \
+  ln -sf /usr/bin/clang-${llvm_major} /usr/local/bin/clang; \
+  ln -sf /usr/bin/clang++-${llvm_major} /usr/local/bin/clang++; \
+  ln -sf /usr/bin/llvm-ar-${llvm_major} /usr/local/bin/llvm-ar; \
+  ln -sf /usr/bin/llvm-config-${llvm_major} /usr/local/bin/llvm-config; \
+  ln -sf /usr/bin/llvm-ranlib-${llvm_major} /usr/local/bin/llvm-ranlib; \
+  test "$(/usr/local/bin/clang -dumpversion | cut -d. -f1)" = "$llvm_major"; \
+  test "$(/usr/local/bin/llvm-config --version | cut -d. -f1)" = "$llvm_major"; \
+  rm -f /tmp/llvm.sh; \
+  rm -rf /var/lib/apt/lists/*
+
 RUN case "$TARGETARCH" in \
   amd64) TARGET_TRIPLE="x86_64-unknown-linux-gnu" ;; \
   arm64) TARGET_TRIPLE="aarch64-unknown-linux-gnu" ;; \
@@ -132,12 +160,15 @@ FROM scratch AS final
 ARG RUST_VERSION
 
 ENV CXXFLAGS=-stdlib=libc++ \
-  CC=clang-21 \
-  CXX=clang++-21 \
+  CC=/usr/local/bin/clang \
+  CXX=/usr/local/bin/clang++ \
+  AR=/usr/local/bin/llvm-ar \
+  RANLIB=/usr/local/bin/llvm-ranlib \
+  LLVM_CONFIG=/usr/local/bin/llvm-config \
   CXXSTDLIB=c++ \
   RUSTUP_HOME=/usr/local/rustup \
   CARGO_HOME=/usr/local/cargo \
-  PATH=/usr/local/cargo/bin:$PATH \
+  PATH=/usr/local/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
   RUST_VERSION=${RUST_VERSION} \
   RUSTC_WRAPPER=/usr/bin/sccache \
   SCCACHE_DIR=/root/.cache/sccache \
