@@ -43,15 +43,12 @@ RUN apt-get update &&\
   rm -rf /var/lib/apt/lists/*
 
 ENV CXXFLAGS=-stdlib=libc++ \
-  CC=/usr/local/bin/clang \
-  CXX=/usr/local/bin/clang++ \
-  AR=/usr/local/bin/llvm-ar \
-  RANLIB=/usr/local/bin/llvm-ranlib \
-  LLVM_CONFIG=/usr/local/bin/llvm-config \
+  CC=clang \
+  CXX=clang++ \
   CXXSTDLIB=c++ \
   RUSTUP_HOME=/usr/local/rustup \
   CARGO_HOME=/usr/local/cargo \
-  PATH=/usr/local/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+  PATH=/usr/local/cargo/bin:$PATH \
   RUST_VERSION=${RUST_VERSION}
 
 
@@ -96,29 +93,18 @@ RUN set -eux; \
   rustc --version;
 
 RUN set -eux; \
-  rust_llvm_version="$(rustc -Vv | awk -F': ' '/^LLVM version:/ { print $2 }')"; \
+  rust_llvm_version="$(rustc -Vv | awk -F': ' '/^LLVM version:/ { print $2; exit }')"; \
   llvm_major="${rust_llvm_version%%.*}"; \
-  test -n "$llvm_major"; \
+  case "$llvm_major" in ''|*[!0-9]*) rustc -Vv; exit 1 ;; esac; \
   echo "rustc uses LLVM ${rust_llvm_version}; installing clang/LLVM ${llvm_major}"; \
-  curl -sSL https://apt.llvm.org/llvm.sh -o /tmp/llvm.sh; \
-  chmod +x /tmp/llvm.sh; \
-  /tmp/llvm.sh "$llvm_major"; \
+  curl -sSL https://apt.llvm.org/llvm.sh | bash -s "$llvm_major"; \
   apt-get update; \
   apt-get install -y --no-install-recommends \
-    clang-${llvm_major} \
-    lld-${llvm_major} \
-    llvm-${llvm_major} \
-    llvm-${llvm_major}-dev \
     libc++-${llvm_major}-dev \
     libc++abi-${llvm_major}-dev; \
-  ln -sf /usr/bin/clang-${llvm_major} /usr/local/bin/clang; \
-  ln -sf /usr/bin/clang++-${llvm_major} /usr/local/bin/clang++; \
-  ln -sf /usr/bin/llvm-ar-${llvm_major} /usr/local/bin/llvm-ar; \
-  ln -sf /usr/bin/llvm-config-${llvm_major} /usr/local/bin/llvm-config; \
-  ln -sf /usr/bin/llvm-ranlib-${llvm_major} /usr/local/bin/llvm-ranlib; \
-  test "$(/usr/local/bin/clang -dumpversion | cut -d. -f1)" = "$llvm_major"; \
-  test "$(/usr/local/bin/llvm-config --version | cut -d. -f1)" = "$llvm_major"; \
-  rm -f /tmp/llvm.sh; \
+  update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${llvm_major} 100; \
+  update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${llvm_major} 100; \
+  test "$(clang -dumpversion | cut -d. -f1)" = "$llvm_major"; \
   rm -rf /var/lib/apt/lists/*
 
 RUN case "$TARGETARCH" in \
@@ -160,15 +146,12 @@ FROM scratch AS final
 ARG RUST_VERSION
 
 ENV CXXFLAGS=-stdlib=libc++ \
-  CC=/usr/local/bin/clang \
-  CXX=/usr/local/bin/clang++ \
-  AR=/usr/local/bin/llvm-ar \
-  RANLIB=/usr/local/bin/llvm-ranlib \
-  LLVM_CONFIG=/usr/local/bin/llvm-config \
+  CC=clang \
+  CXX=clang++ \
   CXXSTDLIB=c++ \
   RUSTUP_HOME=/usr/local/rustup \
   CARGO_HOME=/usr/local/cargo \
-  PATH=/usr/local/cargo/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+  PATH=/usr/local/cargo/bin:$PATH \
   RUST_VERSION=${RUST_VERSION} \
   RUSTC_WRAPPER=/usr/bin/sccache \
   SCCACHE_DIR=/root/.cache/sccache \
