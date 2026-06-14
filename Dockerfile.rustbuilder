@@ -100,6 +100,10 @@ RUN set -eux; \
   curl -sSL https://apt.llvm.org/llvm.sh | bash -s "$llvm_major"; \
   apt-get update; \
   apt-get install -y --no-install-recommends \
+    clang-${llvm_major} \
+    lld-${llvm_major} \
+    llvm-${llvm_major} \
+    llvm-${llvm_major}-dev \
     libc++-${llvm_major}-dev \
     libc++abi-${llvm_major}-dev; \
   update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${llvm_major} 100; \
