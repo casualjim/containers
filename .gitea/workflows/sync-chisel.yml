@@ -10,10 +10,7 @@ permissions:
 
 jobs:
   sync:
-    runs-on:
-      - linux
-      - amd64
-    container: rust-builder
+    runs-on: rust-builder
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
