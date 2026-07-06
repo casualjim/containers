@@ -84,6 +84,49 @@ Updates the BUN_VERSION in `docker-bake.hcl`.
 
 **Effect:** Updates the `default` value in the `BUN_VERSION` variable block
 
+### `get-pg-search-version.sh`
+Fetches the latest stable pg_search (ParadeDB) version from GitHub releases,
+excluding pre-releases and drafts.
+
+**Usage:**
+```bash
+# Without authentication
+./scripts/get-pg-search-version.sh
+
+# With authentication (to avoid rate limiting)
+MIRROR_GITHUB_TOKEN=[REDACTED] ./scripts/get-pg-search-version.sh
+```
+
+**Output:** Version string (e.g., `0.24.1`)
+
+### `get-current-pg-search-version.sh`
+Extracts the current PG_SEARCH_VERSION from `docker-bake.hcl`.
+
+**Usage:**
+```bash
+# Default: reads from ./docker-bake.hcl
+./scripts/get-current-pg-search-version.sh
+
+# Custom file
+./scripts/get-current-pg-search-version.sh /path/to/docker-bake.hcl
+```
+
+**Output:** Version string (e.g., `0.24.1`)
+
+### `update-pg-search-version.sh`
+Updates the PG_SEARCH_VERSION in `docker-bake.hcl`.
+
+**Usage:**
+```bash
+# Default: updates ./docker-bake.hcl
+./scripts/update-pg-search-version.sh 0.24.1
+
+# Custom file
+./scripts/update-pg-search-version.sh 0.24.1 /path/to/docker-bake.hcl
+```
+
+**Effect:** Updates the `default` value in the `PG_SEARCH_VERSION` variable block
+
 ### `update-readme-rust-version.sh`
 Updates the Rust version in `README.md` documentation.
 

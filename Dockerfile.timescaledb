@@ -1,0 +1,46 @@
+# Custom TimescaleDB-HA image with ParadeDB pg_search extension.
+# Base image is Ubuntu 22.04 (jammy) per upstream timescaledb-docker-ha.
+# pg_search prebuilt .deb supports jammy for PostgreSQL 15+.
+# See: https://docs.paradedb.com/deploy/self-hosted/extension
+
+ARG TIMESCALEDB_IMAGE=timescale/timescaledb-ha:pg18
+ARG PG_SEARCH_VERSION=0.24.1
+
+FROM ${TIMESCALEDB_IMAGE}
+
+ARG TARGETARCH
+ARG PG_SEARCH_VERSION
+# Upstream ha image base codename; pg_search ships per-codename debs.
+ARG UBUNTU_CODENAME=jammy
+
+SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
+
+USER root
+
+# Install pg_search prebuilt .deb from ParadeDB GitHub releases.
+# Map docker arch to deb arch suffix.
+RUN case "${TARGETARCH:-amd64}" in \
+      amd64) DEB_ARCH="amd64" ;; \
+      arm64) DEB_ARCH="arm64" ;; \
+      *) echo "unsupported arch: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac; \
+    DEB_NAME="postgresql-18-pg-search_${PG_SEARCH_VERSION}-1PARADEDB-${UBUNTU_CODENAME}_${DEB_ARCH}.deb"; \
+    curl -fsSL \
+      "https://github.com/paradedb/paradedb/releases/download/v${PG_SEARCH_VERSION}/${DEB_NAME}" \
+      -o "/tmp/${DEB_NAME}"; \
+    apt-get update; \
+    apt-get install -y "/tmp/${DEB_NAME}"; \
+    rm -f "/tmp/${DEB_NAME}"; \
+    apt-get clean; \
+    rm -rf /var/lib/apt/lists/*
+
+# Append pg_search to shared_preload_libraries in every PG18 sample config,
+# so initdb-created clusters load the extension at startup. Upstream already
+# sets shared_preload_libraries = 'timescaledb,pg_textsearch' for pg17+ samples.
+# Strip a trailing single quote, append ,pg_search, restore the quote.
+RUN for conf in /usr/share/postgresql/18/postgresql.conf.sample; do \
+      [ -f "$conf" ] || continue; \
+      sed -r -i "s/(shared_preload_libraries\s*=\s*'[^']*)(')/\1,pg_search\2/" "$conf"; \
+    done
+
+USER postgres

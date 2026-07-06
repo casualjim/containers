@@ -34,6 +34,10 @@ variable "UMBER_VERSION" {
   default = "v0.5.0"
 }
 
+variable "PG_SEARCH_VERSION" {
+  default = "0.24.1"
+}
+
 
 # Common configuration for all chisel-based images
 target "chisel-common" {
@@ -281,7 +285,24 @@ target "netdebug" {
 }
 
 
+# timescaledb: TimescaleDB-HA with ParadeDB pg_search extension
+# Base: timescale/timescaledb-ha:pg18 (Ubuntu 22.04 / jammy)
+# Adds pg_search prebuilt .deb and appends it to shared_preload_libraries.
+target "timescaledb" {
+  dockerfile = "Dockerfile.timescaledb"
+  context   = "."
+  platforms = ["linux/amd64", "linux/arm64"]
+  args = {
+    PG_SEARCH_VERSION = PG_SEARCH_VERSION
+  }
+  tags = [
+    "${REGISTRY}/timescaledb:${TAG}",
+    "${REGISTRY}/timescaledb:pg18-pg_search-${PG_SEARCH_VERSION}",
+    "${REGISTRY}/timescaledb:pg18-pg_search-${PG_SEARCH_VERSION}-${BUILD_NUMBER}",
+  ]
+}
+
 # Group to build all images
 group "default" {
-  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "fission-bun", "rustbuilder", "netdebug"]
+  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "fission-bun", "rustbuilder", "netdebug", "timescaledb"]
 }

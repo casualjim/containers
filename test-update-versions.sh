@@ -75,12 +75,34 @@ test_bun_version_fetch() {
     fi
 }
 
+# Test 2b: Fetch latest pg_search version (using curl without auth)
+test_pg_search_version_fetch() {
+    log_info "Test 2b: Fetching latest pg_search version..."
+    
+    # Note: This might fail in sandboxed environments
+    PG_SEARCH_VERSION=$("$REPO_ROOT/scripts/get-pg-search-version.sh" 2>/dev/null || echo "")
+    
+    if [[ -n "$PG_SEARCH_VERSION" ]] && [[ "$PG_SEARCH_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        test_pass "Fetched pg_search version: $PG_SEARCH_VERSION"
+        echo "$PG_SEARCH_VERSION" > "$TEST_DIR/pg_search_version.txt"
+        return 0
+    else
+        log_warn "Could not fetch pg_search version from GitHub API (sandboxed environment or rate limit)"
+        # Use a mock version for testing
+        PG_SEARCH_VERSION="0.24.1"
+        echo "$PG_SEARCH_VERSION" > "$TEST_DIR/pg_search_version.txt"
+        test_pass "Using mock pg_search version for testing: $PG_SEARCH_VERSION"
+        return 0
+    fi
+}
+
 # Test 3: Extract current versions from docker-bake.hcl
 test_version_extraction() {
     log_info "Test 3: Extracting versions from docker-bake.hcl..."
     
     CURRENT_RUST=$("$REPO_ROOT/scripts/get-current-rust-version.sh" "$REPO_ROOT/docker-bake.hcl")
     CURRENT_BUN=$("$REPO_ROOT/scripts/get-current-bun-version.sh" "$REPO_ROOT/docker-bake.hcl")
+    CURRENT_PG_SEARCH=$("$REPO_ROOT/scripts/get-current-pg-search-version.sh" "$REPO_ROOT/docker-bake.hcl")
     
     if [[ -n "$CURRENT_RUST" ]] && [[ "$CURRENT_RUST" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         test_pass "Extracted current Rust version: $CURRENT_RUST"
@@ -96,8 +118,16 @@ test_version_extraction() {
         return 1
     fi
     
+    if [[ -n "$CURRENT_PG_SEARCH" ]] && [[ "$CURRENT_PG_SEARCH" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        test_pass "Extracted current pg_search version: $CURRENT_PG_SEARCH"
+    else
+        test_fail "Failed to extract pg_search version from docker-bake.hcl"
+        return 1
+    fi
+    
     echo "$CURRENT_RUST" > "$TEST_DIR/current_rust.txt"
     echo "$CURRENT_BUN" > "$TEST_DIR/current_bun.txt"
+    echo "$CURRENT_PG_SEARCH" > "$TEST_DIR/current_pg_search.txt"
 }
 
 # Test 4: Version update logic
@@ -135,6 +165,20 @@ test_version_update() {
         return 1
     fi
     
+    # Update pg_search version to a test value
+    TEST_PG_SEARCH_VERSION="77.77.77"
+    "$REPO_ROOT/scripts/update-pg-search-version.sh" "$TEST_PG_SEARCH_VERSION" "$TEST_DIR/test-bake.hcl"
+    
+    # Verify the update
+    UPDATED_PG_SEARCH=$("$REPO_ROOT/scripts/get-current-pg-search-version.sh" "$TEST_DIR/test-bake.hcl")
+    
+    if [[ "$UPDATED_PG_SEARCH" == "$TEST_PG_SEARCH_VERSION" ]]; then
+        test_pass "pg_search version update works correctly"
+    else
+        test_fail "pg_search version update failed (expected: $TEST_PG_SEARCH_VERSION, got: $UPDATED_PG_SEARCH)"
+        return 1
+    fi
+    
     # Verify Rust version wasn't affected by Bun update
     FINAL_RUST=$("$REPO_ROOT/scripts/get-current-rust-version.sh" "$TEST_DIR/test-bake.hcl")
     
@@ -156,8 +200,12 @@ test_version_comparison() {
     CURRENT_BUN=$(cat "$TEST_DIR/current_bun.txt")
     LATEST_BUN=$(cat "$TEST_DIR/bun_version.txt")
     
+    CURRENT_PG_SEARCH=$(cat "$TEST_DIR/current_pg_search.txt")
+    LATEST_PG_SEARCH=$(cat "$TEST_DIR/pg_search_version.txt")
+    
     log_info "Current Rust: $CURRENT_RUST, Latest Rust: $LATEST_RUST"
     log_info "Current Bun: $CURRENT_BUN, Latest Bun: $LATEST_BUN"
+    log_info "Current pg_search: $CURRENT_PG_SEARCH, Latest pg_search: $LATEST_PG_SEARCH"
     
     if [[ "$CURRENT_RUST" != "$LATEST_RUST" ]]; then
         log_info "Rust version differs - update would be triggered"
@@ -169,6 +217,12 @@ test_version_comparison() {
         log_info "Bun version differs - update would be triggered"
     else
         log_info "Bun version is up to date - no update needed"
+    fi
+    
+    if [[ "$CURRENT_PG_SEARCH" != "$LATEST_PG_SEARCH" ]]; then
+        log_info "pg_search version differs - update would be triggered"
+    else
+        log_info "pg_search version is up to date - no update needed"
     fi
     
     test_pass "Version comparison logic validated"
@@ -213,6 +267,9 @@ main() {
     echo ""
     
     test_bun_version_fetch || true
+    echo ""
+    
+    test_pg_search_version_fetch || true
     echo ""
     
     test_version_extraction || true
