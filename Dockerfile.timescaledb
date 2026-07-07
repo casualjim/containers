@@ -10,8 +10,10 @@ FROM ${TIMESCALEDB_IMAGE}
 
 ARG TARGETARCH
 ARG PG_SEARCH_VERSION
-# Upstream ha image base codename; pg_search ships per-codename debs.
-ARG UBUNTU_CODENAME=jammy
+# ParadeDB ships per-distro debs. No jammy build for pg18; the bookworm
+# (Debian 12) deb needs only GLIBC_2.34 and runs on the jammy (glibc 2.35)
+# base of timescaledb-ha. The noble deb needs GLIBC_2.38 and fails on jammy.
+ARG DEB_CODENAME=bookworm
 
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
@@ -24,7 +26,7 @@ RUN case "${TARGETARCH:-amd64}" in \
       arm64) DEB_ARCH="arm64" ;; \
       *) echo "unsupported arch: ${TARGETARCH}" >&2; exit 1 ;; \
     esac; \
-    DEB_NAME="postgresql-18-pg-search_${PG_SEARCH_VERSION}-1PARADEDB-${UBUNTU_CODENAME}_${DEB_ARCH}.deb"; \
+    DEB_NAME="postgresql-18-pg-search_${PG_SEARCH_VERSION}-1PARADEDB-${DEB_CODENAME}_${DEB_ARCH}.deb"; \
     curl -fsSL \
       "https://github.com/paradedb/paradedb/releases/download/v${PG_SEARCH_VERSION}/${DEB_NAME}" \
       -o "/tmp/${DEB_NAME}"; \
