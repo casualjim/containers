@@ -297,6 +297,7 @@ target "timescaledb" {
   }
   tags = [
     "${REGISTRY}/timescaledb:${TAG}",
+    "${REGISTRY}/timescaledb:pg18",
     "${REGISTRY}/timescaledb:pg18-pg_search-${PG_SEARCH_VERSION}",
     "${REGISTRY}/timescaledb:pg18-pg_search-${PG_SEARCH_VERSION}-${BUILD_NUMBER}",
   ]
