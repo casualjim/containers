@@ -262,6 +262,20 @@ target "rustbuilder" {
   }
 }
 
+# cloudsandbox: Cloud sandbox image with Python, Node, Bun, and AI coding CLIs
+# Base: ubuntu:24.04 (full Ubuntu, not chisel)
+# Includes: Python + scientific libs, Node + claude-code/lobehub/codex, Bun, agent-browser, lightpanda
+target "cloudsandbox" {
+  dockerfile = "Dockerfile.cloudsandbox"
+  context    = "."
+  platforms  = ["linux/amd64", "linux/arm64"]
+  tags = [
+    "${REGISTRY}/onlyboxes:${TAG}",
+    "${REGISTRY}/onlyboxes:lobehub",
+    "${REGISTRY}/onlyboxes:lobehub-${BUILD_NUMBER}",
+  ]
+}
+
 # netdebug: Network debugging and troubleshooting toolkit
 # Includes: tcpdump, ngrep, nmap, curl, psql(18), redis-cli, kubectl, nats, clickhouse-client, grpcurl, jq, ripgrep, eza, umber and more
 # Designed for debugging network issues in containerized environments
@@ -305,5 +319,5 @@ target "timescaledb" {
 
 # Group to build all images
 group "default" {
-  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "fission-bun", "rustbuilder", "netdebug", "timescaledb"]
+  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "fission-bun", "rustbuilder", "netdebug", "timescaledb", "cloudsandbox"]
 }
