@@ -14,9 +14,12 @@ Images published by CI to GHCR:
 - `ghcr.io/casualjim/bare:libcxx-ssl-ladybug`
 - `ghcr.io/casualjim/lbug-cli:latest`
 - `ghcr.io/casualjim/bun:latest`
+- `ghcr.io/casualjim/fission-bun:latest`
 - `ghcr.io/casualjim/sqlx-cli:latest`
 - `ghcr.io/casualjim/rust-builder:latest`
 - `ghcr.io/casualjim/netdebug:latest`
+- `ghcr.io/casualjim/timescaledb:latest`
+- `ghcr.io/casualjim/onlyboxes:lobehub`
 
 ### static
 Minimal base image with no extra packages, designed for static applications and Go binaries that don't require additional system libraries.
@@ -118,7 +121,10 @@ Fission Bun environment runtime target.
 - **Base**: `bun-builder` target (Chiseled Ubuntu 26.04)
 - **Repository**: `ghcr.io/casualjim/fission-bun:latest`
 - **User**: `appuser` (UID 10001, non-root)
-- **Note**: Build target exists in `docker-bake.hcl`, but it is not currently pushed by the default CI build workflows.
+- **Features**:
+  - Fission serverless runtime
+  - Bun-based function execution
+  - Production-ready for Fission deployments
 
 ### sqlx-cli
 SQLx CLI tool container for database management and migrations.
@@ -175,6 +181,32 @@ Network debugging and troubleshooting toolkit for containerized environments.
   - **Core**: bash, tini (init), gzip
 - **Use Case**: Debugging network issues, inspecting traffic, testing connectivity in Kubernetes/Docker environments
 
+### timescaledb
+TimescaleDB-HA with ParadeDB pg_search extension.
+
+- **Base**: timescale/timescaledb-ha:pg18 (Ubuntu 22.04 / jammy)
+- **Repository**: `ghcr.io/casualjim/timescaledb:latest`
+- **User**: `root`
+- **Features**:
+  - TimescaleDB-HA with PostgreSQL 18
+  - ParadeDB pg_search extension
+  - Prebuilt .deb integration
+  - Optimized for search workloads
+
+### cloudsandbox
+Cloud sandbox image with Python, Node, Bun, and AI coding CLIs.
+
+- **Base**: ubuntu:24.04 (full Ubuntu, not chiseled)
+- **Repository**: `ghcr.io/casualjim/onlyboxes:lobehub`
+- **User**: `root`
+- **Features**:
+  - Python + scientific libraries
+  - Node.js + claude-code/lobehub/codex
+  - Bun runtime
+  - agent-browser
+  - lightpanda
+- **Use Case**: Cloud development sandbox, AI coding workflows
+
 ## Building Images
 
 Build all images:
@@ -197,6 +229,8 @@ docker buildx bake fission-bun
 docker buildx bake sqlx-cli
 docker buildx bake rustbuilder
 docker buildx bake netdebug
+docker buildx bake timescaledb
+docker buildx bake cloudsandbox
 ```
 
 Build with custom variables:
@@ -314,11 +348,11 @@ tar -xzf chisel_v1.4.1_linux_amd64.tar.gz
 ## Workflow
 
 Build and push workflow:
-- `.forgejo/workflows/build.yml`
+- `.gitea/workflows/build.yml`
 
 It builds on push/PR and on a weekly schedule:
 - On push to the `main` branch
 - Every Wednesday at 5PM UTC
 
 Chisel slice sync is a separate workflow:
-- `.forgejo/workflows/sync-chisel.yml`
+- `.gitea/workflows/sync-chisel.yml`
