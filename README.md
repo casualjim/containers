@@ -145,7 +145,7 @@ Comprehensive Rust development and build container with LLVM/Clang toolchain.
 - **Base**: Ubuntu 24.04
 - **Repository**: `ghcr.io/casualjim/rust-builder:latest`
 - **User**: `root`
-- **Rust Version**: 1.97.0
+- **Rust Version**: 1.97.1
 - **Bun Version**: 1.3.14
 - **Ladybug Version**: v0.14.1
 - **Features**:
