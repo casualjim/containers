@@ -97,26 +97,26 @@ RUN apt-get update -yq && \
     # Shell and init
     bash \
     tini && \
-    curl -fsSL \
+    curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 \
       "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${KUBECTL_ARCH}/kubectl" \
       -o /usr/local/bin/kubectl && \
-    curl -fsSL \
+    curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 \
       "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/${KUBECTL_ARCH}/kubectl.sha256" \
       -o /tmp/kubectl.sha256 && \
     echo "$(cat /tmp/kubectl.sha256)  /usr/local/bin/kubectl" | sha256sum -c - && \
     chmod +x /usr/local/bin/kubectl && \
-    curl -fsSL \
+    curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 \
       "https://github.com/nats-io/natscli/releases/download/v${NATSCLI_VERSION}/nats-${NATSCLI_VERSION}-${NATS_ARCH}.deb" \
       -o /tmp/nats.deb && \
     apt-get install -yqq --no-install-recommends /tmp/nats.deb && \
-    curl -fsSL \
+    curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 \
       "https://github.com/fullstorydev/grpcurl/releases/download/v${GRPCURL_VERSION}/grpcurl_${GRPCURL_VERSION}_linux_${GRPCURL_ARCH}.deb" \
       -o /tmp/grpcurl.deb && \
     apt-get install -yqq --no-install-recommends /tmp/grpcurl.deb && \
-    curl -fsSL \
+    curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 \
       "https://packages.clickhouse.com/deb/pool/main/c/clickhouse/clickhouse-common-static_${CLICKHOUSE_VERSION}_${CLICKHOUSE_ARCH}.deb" \
       -o /tmp/clickhouse-common-static.deb && \
-    curl -fsSL \
+    curl -fsSL --retry 5 --retry-all-errors --retry-delay 5 \
       "https://packages.clickhouse.com/deb/pool/main/c/clickhouse/clickhouse-client_${CLICKHOUSE_VERSION}_${CLICKHOUSE_ARCH}.deb" \
       -o /tmp/clickhouse-client.deb && \
     apt-get install -yqq --no-install-recommends /tmp/clickhouse-common-static.deb /tmp/clickhouse-client.deb && \
