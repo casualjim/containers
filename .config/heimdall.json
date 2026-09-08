@@ -1,0 +1,13 @@
+{
+  "sandbox": {
+    "filesystem": {
+      "deny": [
+        "!~/.docker"
+      ],
+      "writable": [
+        "!~/.docker/buildx",
+        "/var/run/docker.sock"
+      ]
+    }
+  }
+}

@@ -1,0 +1,120 @@
+ARG UBUNTU_RELEASE=26.04
+ARG LLVM_MAJOR=22
+
+FROM ubuntu:${UBUNTU_RELEASE} AS rustbuilder
+
+ARG TARGETARCH
+ARG LLVM_MAJOR
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update &&\
+  apt-get install -y software-properties-common lsb-release tzdata locales sudo &&\
+  echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen &&\
+  locale-gen &&\
+  export LANG='en_US.UTF-8' &&\
+  ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &&\
+  groupmod -n eng ubuntu &&\
+  usermod -u 1000 -l eng -d /home/eng -m ubuntu &&\
+  id eng &&\
+  mkdir -p /etc/sudoers.d && echo 'eng ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/eng && chmod 0440 /etc/sudoers.d/eng && visudo -cf /etc/sudoers.d/eng
+
+ENV TZ=America/Los_Angeles LANG='en_US.UTF-8'
+
+RUN apt-get update &&\
+  apt-get install -y \
+  curl \
+  ripgrep \
+  fd-find \
+  eza \
+  fzf \
+  hx \
+  zsh \
+  zsh-antidote \
+  starship \
+  # gnupg \
+  ca-certificates \
+  jq \
+  git \
+  build-essential \
+  cmake \
+  pkg-config \
+  libglib2.0-dev \
+  libpoppler-glib-dev \
+  libprotobuf-dev \
+  protobuf-compiler \
+  libssl-dev \
+  tesseract-ocr \
+  unzip \
+  mold \
+  bc \
+  just \
+  sccache \
+  bison \
+  flex\
+  libpq-dev &&\
+  install -m 0755 -d /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && \
+    chmod a+r /etc/apt/keyrings/docker.asc && \
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+  apt-get update && \
+  apt-get install -y docker-ce-cli docker-buildx-plugin docker-compose-plugin; \
+  rm -rf /var/lib/apt/lists/*
+
+
+ENV CXXFLAGS=-stdlib=libc++ \
+  CC=clang \
+  CXX=clang++ \
+  CXXSTDLIB=c++
+
+RUN set -eux; \
+  llvm_major="${LLVM_MAJOR}"; \
+  echo "installing clang/LLVM ${llvm_major}"; \
+  curl -sSL https://apt.llvm.org/llvm.sh | bash -s "$llvm_major"; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends \
+    clang-${llvm_major} \
+    lld-${llvm_major} \
+    llvm-${llvm_major} \
+    llvm-${llvm_major}-dev \
+    libc++-${llvm_major}-dev \
+    libc++abi-${llvm_major}-dev; \
+  update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${llvm_major} 100; \
+  update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-${llvm_major} 100; \
+  test "$(clang -dumpversion | cut -d. -f1)" = "$llvm_major"; \
+  rm -rf /var/lib/apt/lists/*
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+USER eng
+
+RUN curl https://mise.run | sudo env MISE_INSTALL_PATH="/usr/local/bin/mise" sh
+RUN mise trust -a && mise install
+
+# squash layers
+FROM scratch AS final
+
+ENV DEBIAN_FRONTEND=noninteractive \
+  CXXFLAGS=-stdlib=libc++ \
+  CC=clang \
+  CXX=clang++ \
+  CXXSTDLIB=c++ \
+  SCCACHE_DIR=/home/eng/.cache/sccache \
+  SCCACHE_CACHE_SIZE=10G \
+  TZ=America/Los_Angeles \
+  LANG=en_US.UTF-8 \
+  MISE_ENV=agent
+
+COPY --from=rustbuilder / /
+
+
+# Set bash as default shell
+SHELL ["/bin/zsh", "-o", "pipefail", "-c"]
+
+USER eng
+
+ADD --chown=eng zshrc /home/eng/.zshrc
+
+# Default to bash for interactive use
+CMD ["/bin/zsh"]
+WORKDIR /home/eng
