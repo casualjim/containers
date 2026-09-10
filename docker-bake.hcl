@@ -35,7 +35,7 @@ variable "UMBER_VERSION" {
 }
 
 variable "PG_SEARCH_VERSION" {
-  default = "0.25.6"
+  default = "0.25.7"
 }
 
 
