@@ -10,6 +10,10 @@ USER eng
 RUN set -eux; \
   curl -fsSL https://omp.sh/install.sh | sh; \
   mkdir -p /home/eng/.config/mise && printf '%s\n' \
+  '[settings]' \
+  'idiomatic_version_file_enable_tools = ["pnpm","bun", "npm"]' \
+  '[env]' \
+  '_.path = ["{{config_root}}/node_modules/.bin"]' \
   '[tools]' \
   'ripgrep = "latest"' \
   'ast-grep = "latest"' \
@@ -17,7 +21,13 @@ RUN set -eux; \
   'fd = "latest"' \
   'fzf = "latest"' \
   'github-cli = "latest"' \
+  'node = "lts"' \
+  'pnpm = "latest"' \
+  'bun = "latest"' \
+  '"npm:@deepseek-ai/dsh" = "0.1.5-rc.1"' \
+  '"npm:@earendil-works/pi-coding-agent" = "latest"' \
   > /home/eng/.config/mise/config.toml; \
-  mise trust -a && mise install
+  mise trust -a && mise install &&\
+  echo 'eval "$(mise activate zsh)"' >> .zshrc 
 
 
