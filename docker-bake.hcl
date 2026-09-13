@@ -121,6 +121,21 @@ target "libcxx-ssl" {
   ]
 }
 
+# libcxx-udev-ssl: libcxx-ssl image plus libudev.so.1 (hidapi runtime deps, e.g. hodor)
+target "libcxx-udev-ssl" {
+  inherits = ["chisel-common"]
+  context  = "."
+  args = {
+    EXTRA_PACKAGES      = "libstdc++6_libs libc++1_libs libssl3t64_libs openssl_bins libudev1_libs"
+    POST_INSTALL_SCRIPT = "install-libcxx.sh"
+  }
+  tags = [
+    "${REGISTRY}/bare:libcxx-udev-ssl",
+    "${REGISTRY}/bare:libcxx-udev-ssl-${UBUNTU_RELEASE}",
+    "${REGISTRY}/bare:libcxx-udev-ssl-${UBUNTU_RELEASE}-${BUILD_NUMBER}",
+  ]
+}
+
 # libcxx-ssl-tesseract: libcxx-ssl image with Tesseract OCR and all language packs
 target "libcxx-ssl-tesseract" {
   inherits = ["chisel-common"]
@@ -305,7 +320,27 @@ target "devenv" {
   ]
 }
 
+# devenv-omp: devenv + external tool deps omp shells out to
+# (python3 for eval kernel, gh CLI, mise-managed bun/rg/ast-grep/jj/fd/fzf)
+target "devenv-omp" {
+  dockerfile = "Dockerfile.devenv-omp"
+  context    = "."
+  platforms  = ["linux/amd64", "linux/arm64"]
+  contexts = {
+    devenv = "target:devenv"
+  }
+  args = {
+    UBUNTU_RELEASE = UBUNTU_RELEASE
+    OMP_VERSION    = "latest"
+  }
+  tags = [
+    "${REGISTRY}/devenv:omp",
+    "${REGISTRY}/devenv:omp-${UBUNTU_RELEASE}",
+    "${REGISTRY}/devenv:omp-${UBUNTU_RELEASE}-${BUILD_NUMBER}",
+  ]
+}
+
 # Group to build all images
 group "default" {
-  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "rustbuilder", "netdebug", "timescaledb", "cloudsandbox", "devenv"]
+  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-udev-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "rustbuilder", "netdebug", "timescaledb", "cloudsandbox", "devenv", "devenv-omp"]
 }

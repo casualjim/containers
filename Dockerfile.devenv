@@ -32,7 +32,7 @@ RUN apt-get update &&\
   zsh \
   zsh-antidote \
   starship \
-  # gnupg \
+  gnupg \
   ca-certificates \
   jq \
   git \
@@ -86,9 +86,10 @@ RUN set -eux; \
   rm -rf /var/lib/apt/lists/*
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-USER eng
 
-RUN curl https://mise.run | sudo env MISE_INSTALL_PATH="/usr/local/bin/mise" sh
+RUN curl https://mise.run | MISE_INSTALL_PATH="/usr/local/bin/mise" sh
+
+USER eng
 RUN mise trust -a && mise install
 
 # squash layers

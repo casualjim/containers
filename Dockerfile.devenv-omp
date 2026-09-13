@@ -1,0 +1,23 @@
+FROM devenv AS devenv-omp
+
+ENV DEBIAN_FRONTEND=noninteractive \
+  HOME=/home/eng
+
+USER eng
+
+# Install omp via the documented installer (omp.sh/install.sh), then the agent
+# toolchain via mise. Installer drops omp in ~/.local/bin (zshrc PATHs it).
+RUN set -eux; \
+  curl -fsSL https://omp.sh/install.sh | sh; \
+  mkdir -p /home/eng/.config/mise && printf '%s\n' \
+  '[tools]' \
+  'ripgrep = "latest"' \
+  'ast-grep = "latest"' \
+  'jujutsu = "latest"' \
+  'fd = "latest"' \
+  'fzf = "latest"' \
+  'github-cli = "latest"' \
+  > /home/eng/.config/mise/config.toml; \
+  mise trust -a && mise install
+
+

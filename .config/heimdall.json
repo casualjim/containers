@@ -1,11 +1,15 @@
 {
   "sandbox": {
+    "gpgAgent": true,
     "filesystem": {
       "deny": [
-        "!~/.docker"
+        "!~/.docker",
+        "!~/.gnupg"
       ],
       "writable": [
-        "!~/.docker/buildx",
+        "~/.docker/buildx",
+        "~/.local/share/gopass/stores",
+        "~/.gnupg",
         "/var/run/docker.sock"
       ]
     }

@@ -23,6 +23,7 @@ RUN apt-get update &&\
   build-essential \
   cmake \
   pkg-config \
+  libudev-dev \
   libglib2.0-dev \
   libpoppler-glib-dev \
   libprotobuf-dev \
@@ -139,7 +140,7 @@ RUN arch="$(dpkg --print-architecture)"; \
   chmod +x /usr/bin/lbug && \
   ldconfig
 
-ADD cargo-config.toml /.cargo/config.toml
+COPY cargo-config.toml /.cargo/config.toml
 
 RUN curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash && \
   cargo binstall -y cargo-nextest cargo-release

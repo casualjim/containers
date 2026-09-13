@@ -20,6 +20,8 @@ Images published by CI to GHCR:
 - `ghcr.io/casualjim/netdebug:latest`
 - `ghcr.io/casualjim/timescaledb:latest`
 - `ghcr.io/casualjim/onlyboxes:lobehub`
+- `ghcr.io/casualjim/devenv:latest`
+- `ghcr.io/casualjim/devenv:omp`
 
 ### static
 Minimal base image with no extra packages, designed for static applications and Go binaries that don't require additional system libraries.
@@ -205,7 +207,32 @@ Cloud sandbox image with Python, Node, Bun, and AI coding CLIs.
   - Bun runtime
   - agent-browser
   - lightpanda
-- **Use Case**: Cloud development sandbox, AI coding workflows
+
+### devenv
+Full development environment (Ubuntu 26.04) with Rust/Clang toolchain and shell setup.
+
+- **Base**: Ubuntu 26.04 (full, not chiseled)
+- **Repository**: `ghcr.io/casualjim/devenv:latest`
+- **User**: `eng` (non-root, uid 1000)
+- **Features**:
+  - Rust/Clang toolchain (LLVM 22) with mold, sccache, build essentials
+  - zsh + starship + antidote, hx, eza, fzf
+  - Docker CLI + buildx + compose plugins
+  - mise (tool manager)
+- **Use Case**: Development sandbox base image
+
+### devenv-omp
+`devenv` plus the omp coding agent and its external tool dependencies.
+
+- **Base**: `devenv`
+- **Repository**: `ghcr.io/casualjim/devenv:omp`
+- **User**: `eng` (non-root, uid 1000)
+- **Features**:
+  - omp coding agent (prebuilt binary from can1357/oh-my-pi releases)
+  - python3 (omp eval py kernel)
+  - gh CLI (omp github tool)
+  - mise-installed bun, ripgrep, ast-grep, jujutsu, fd, fzf on PATH
+- **Use Case**: Ready-to-run omp agent container
 
 ## Building Images
 
@@ -229,8 +256,10 @@ docker buildx bake fission-bun
 docker buildx bake sqlx-cli
 docker buildx bake rustbuilder
 docker buildx bake netdebug
-docker buildx bake timescaledb
 docker buildx bake cloudsandbox
+docker buildx bake devenv
+docker buildx bake devenv-omp
+docker buildx bake timescaledb
 ```
 
 Build with custom variables:

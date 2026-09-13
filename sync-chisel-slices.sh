@@ -24,32 +24,35 @@ REQUIRED_PACKAGES=(
   "jq"
   "tzdata"
   "media-types"
-  
+
   # libc and core libraries
   "libc6"
   "libgcc-s1"
-  
+
   # For libstdc++ variant
   "libstdc++6"
-  
+
   # For SSL support
   "libssl3t64"
   "openssl"
-  
+
   # Dependencies for libunwind-20
   "libatomic1"
-  
+
   # Dependencies for libedit (if needed by libunwind)
   "libbsd0"
   "libmd0"
   "libedit2"
-  
+
+  # hidapi runtime (libudev.so.1) for binaries like hodor
+  "libudev1"
+
   # Other common dependencies
   "libffi8"
   "libxml2-16"
   "libzstd1"
   "zlib1g"
-  
+
 )
 
 # Custom packages we maintain locally
@@ -74,12 +77,12 @@ echo "==> Analyzing dependencies and copying required slices..."
 find_dependencies() {
   local package="$1"
   local slice_file="${TEMP_DIR}/slices/${package}.yaml"
-  
+
   if [[ ! -f "${slice_file}" ]]; then
     echo "WARNING: Slice file not found for package: ${package}" >&2
     return
   fi
-  
+
   # Extract essential dependencies using yq or grep
   if command -v yq >/dev/null 2>&1 && yq --version 2>&1 | grep -qi 'mikefarah'; then
     yq eval '(.essential // {}) + (.slices.*.essential // {}) | keys | .[]' "${slice_file}" 2>/dev/null | sed 's/_.*$//' | sort -u
