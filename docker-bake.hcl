@@ -320,8 +320,9 @@ target "devenv" {
   ]
 }
 
-# devenv-omp: devenv + external tool deps omp shells out to
-# (python3 for eval kernel, gh CLI, mise-managed bun/rg/ast-grep/jj/fd/fzf)
+# devenv-omp: devenv + external tool deps omp shells out to; published as devagent
+# (python3 for eval kernel, gh CLI, mise-managed bun/rg/ast-grep/jj/fd/fzf,
+#  podman container engine, docker CLI as pure client on the podman socket)
 target "devenv-omp" {
   dockerfile = "Dockerfile.devenv-omp"
   context    = "."
@@ -334,9 +335,9 @@ target "devenv-omp" {
     OMP_VERSION    = "latest"
   }
   tags = [
-    "${REGISTRY}/devenv:omp",
-    "${REGISTRY}/devenv:omp-${UBUNTU_RELEASE}",
-    "${REGISTRY}/devenv:omp-${UBUNTU_RELEASE}-${BUILD_NUMBER}",
+    "${REGISTRY}/devagent:${TAG}",
+    "${REGISTRY}/devagent:${UBUNTU_RELEASE}",
+    "${REGISTRY}/devagent:${UBUNTU_RELEASE}-${BUILD_NUMBER}",
   ]
 }
 
