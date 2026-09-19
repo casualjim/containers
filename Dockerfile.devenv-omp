@@ -8,8 +8,11 @@ ENV DEBIAN_FRONTEND=noninteractive \
 
 USER root
 
+# policy-rc.d stops runit's postinst from starting runsvdir during the build
 RUN set -eux; \
-  apt-get update && apt-get install -y --no-install-recommends podman uidmap passt slirp4netns fuse-overlayfs netavark aardvark-dns crun catatonit nftables curl ca-certificates gnupg; \
+  printf '%s\n' '#!/bin/sh' 'exit 101' > /usr/sbin/policy-rc.d; \
+  chmod 755 /usr/sbin/policy-rc.d; \
+  apt-get update && apt-get install -y --no-install-recommends podman runit uidmap passt slirp4netns fuse-overlayfs netavark aardvark-dns crun catatonit nftables curl ca-certificates gnupg; \
   install -m 0755 -d /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && \
     chmod a+r /etc/apt/keyrings/docker.asc && \
@@ -20,7 +23,20 @@ RUN set -eux; \
   grep -q '^eng:' /etc/subuid || echo 'eng:100000:65536' >> /etc/subuid; \
   grep -q '^eng:' /etc/subgid || echo 'eng:100000:65536' >> /etc/subgid; \
   mkdir -p /run/user/1000 && chown eng:eng /run/user/1000; \
+  rm -f /usr/sbin/policy-rc.d; \
   rm -rf /var/lib/apt/lists/*
+
+# runit supervises the rootless podman API socket; the entrypoint starts the
+# service tree and waits for that socket before handing over to the container
+# command. supervise/ must belong to eng: runsv writes its control files there.
+COPY devagent-entrypoint.sh /usr/local/bin/devagent-entrypoint
+COPY runit/podman/ /etc/sv/podman/
+
+RUN set -eux; \
+  mkdir -p /etc/service /var/log/podman /etc/sv/podman/supervise /etc/sv/podman/log/supervise; \
+  chmod -R 755 /usr/local/bin/devagent-entrypoint /etc/sv/podman; \
+  chown -R eng:eng /var/log/podman /etc/sv/podman/supervise /etc/sv/podman/log/supervise; \
+  ln -s /etc/sv/podman /etc/service/podman
 
 USER eng
 
@@ -30,7 +46,7 @@ RUN set -eux; \
   curl -fsSL https://omp.sh/install.sh | sh; \
   mkdir -p /home/eng/.config/mise && printf '%s\n' \
   '[settings]' \
-  'idiomatic_version_file_enable_tools = ["pnpm","bun", "npm"]' \
+  'idiomatic_version_file_enable_tools = ["pnpm","bun", "npm", "rust", "go", "uv"]' \
   '[env]' \
   '_.path = ["{{config_root}}/node_modules/.bin"]' \
   '[tools]' \
@@ -43,15 +59,16 @@ RUN set -eux; \
   'node = "lts"' \
   'pnpm = "latest"' \
   'bun = "latest"' \
+  'fnox = "latest"' \
   '"npm:@deepseek-ai/dsh" = "0.1.5-rc.1"' \
   '"npm:@earendil-works/pi-coding-agent" = "latest"' \
   > /home/eng/.config/mise/config.toml; \
   mise trust -a && mise install &&\
   echo 'eval "$(mise activate zsh)"' >> .zshrc 
 
-RUN set -eux; \
-  echo 'mkdir -p "$XDG_RUNTIME_DIR"' >> .zshrc; \
-  echo 'if ! [ -e "$XDG_RUNTIME_DIR/podman/podman.sock" ]; then podman system service -t 0 >/dev/null 2>&1 & fi' >> .zshrc; \
-  echo 'n=0; while [ $n -lt 50 ] && ! [ -S "$XDG_RUNTIME_DIR/podman/podman.sock" ]; do sleep 0.1; n=$((n+1)); done' >> .zshrc
+# catatonit is PID 1: it reaps strays and forwards signals; the entrypoint
+# starts the runit service tree and then execs the container command.
+ENTRYPOINT ["/usr/bin/catatonit", "--", "/usr/local/bin/devagent-entrypoint"]
+CMD ["/bin/zsh"]
 
 

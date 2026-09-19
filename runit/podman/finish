@@ -1,0 +1,4 @@
+#!/bin/sh
+# runsv restarts the service immediately; back off so a failing podman
+# (no user namespace, missing subuid) doesn't spin.
+sleep 1
