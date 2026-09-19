@@ -29,12 +29,12 @@ RUN set -eux; \
 # runit supervises the rootless podman API socket; the entrypoint starts the
 # service tree and waits for that socket before handing over to the container
 # command. supervise/ must belong to eng: runsv writes its control files there.
-COPY devagent-entrypoint.sh /usr/local/bin/devagent-entrypoint
+COPY devagent-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 COPY runit/podman/ /etc/sv/podman/
 
 RUN set -eux; \
   mkdir -p /etc/service /var/log/podman /etc/sv/podman/supervise /etc/sv/podman/log/supervise; \
-  chmod -R 755 /usr/local/bin/devagent-entrypoint /etc/sv/podman; \
+  chmod -R 755 /usr/local/bin/docker-entrypoint.sh /etc/sv/podman; \
   chown -R eng:eng /var/log/podman /etc/sv/podman/supervise /etc/sv/podman/log/supervise; \
   ln -s /etc/sv/podman /etc/service/podman
 
@@ -68,7 +68,7 @@ RUN set -eux; \
 
 # catatonit is PID 1: it reaps strays and forwards signals; the entrypoint
 # starts the runit service tree and then execs the container command.
-ENTRYPOINT ["/usr/bin/catatonit", "--", "/usr/local/bin/devagent-entrypoint"]
+ENTRYPOINT ["/usr/bin/catatonit", "--", "/usr/local/bin/docker-entrypoint.sh"]
 CMD ["/bin/zsh"]
 
 
