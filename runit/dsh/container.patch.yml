@@ -1,0 +1,11 @@
+# Container bind override: the dsh CLI refuses --host 0.0.0.0 by design, so a
+# non-loopback bind for Docker bridge port publishing goes through this patch
+# row instead. Restates the full webserver row config; patch rows replace the
+# targeted row's whole config.
+- id: webserver
+  config:
+    host: '0.0.0.0'
+    port: !!js ctx.webStartup.port ?? 3080
+    compression: gzip
+    compressionLevel: 1
+    compressionThresholdBytes: 1024

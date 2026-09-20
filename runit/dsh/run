@@ -1,0 +1,4 @@
+#!/bin/sh
+exec 2>&1
+cd /home/eng
+exec /home/eng/.local/share/mise/shims/dsh web --patch /etc/dsh/container.patch.yml --no-open
