@@ -12,7 +12,7 @@ USER root
 RUN set -eux; \
   printf '%s\n' '#!/bin/sh' 'exit 101' > /usr/sbin/policy-rc.d; \
   chmod 755 /usr/sbin/policy-rc.d; \
-  apt-get update && apt-get install -y --no-install-recommends podman runit uidmap passt slirp4netns fuse-overlayfs netavark aardvark-dns crun catatonit nftables curl ca-certificates gnupg; \
+  apt-get update && apt-get install -y --no-install-recommends podman runit uidmap passt slirp4netns fuse-overlayfs netavark aardvark-dns crun catatonit nftables curl ca-certificates gnupg postgresql-client libcap-ng-dev; \
   install -m 0755 -d /etc/apt/keyrings && \
     curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && \
     chmod a+r /etc/apt/keyrings/docker.asc && \
@@ -64,6 +64,8 @@ RUN set -eux; \
   'fd = "latest"' \
   'fzf = "latest"' \
   'github-cli = "latest"' \
+  'redis = "latest"' \
+  '"http:tea" = { version = "latest", version_list_url = "https://gitea.com/api/v1/repos/gitea/tea/releases", version_json_path = ".[].tag_name", version_order = "semver", platforms = { "linux-x64" = { url = "https://gitea.com/gitea/tea/releases/download/v{{version}}/tea-{{version}}-linux-amd64.xz" }, "linux-arm64" = { url = "https://gitea.com/gitea/tea/releases/download/v{{version}}/tea-{{version}}-linux-arm64.xz" } } }' \
   'node = "lts"' \
   'pnpm = "latest"' \
   'bun = "latest"' \
