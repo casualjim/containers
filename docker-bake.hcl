@@ -11,7 +11,7 @@ variable "REGISTRY" {
 }
 
 variable "RUST_VERSION" {
-  default = "1.98.1"
+  default = "1.99.0"
 }
 
 variable "BUN_VERSION" {
