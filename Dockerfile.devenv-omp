@@ -72,9 +72,10 @@ RUN set -eux; \
   'fnox = "latest"' \
   '"npm:@deepseek-ai/dsh" = "0.1.5-rc.1"' \
   '"npm:@earendil-works/pi-coding-agent" = "latest"' \
+  '"aqua:cantino/mcfly" = "latest"' \
+  '"github:casualjim/zage" = "latest"' \
   > /home/eng/.config/mise/config.toml; \
-  mise trust -a && mise install &&\
-  echo 'eval "$(mise activate zsh)"' >> .zshrc 
+  mise trust -a && mise install
 
 EXPOSE 3080
 

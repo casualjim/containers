@@ -152,7 +152,7 @@ Comprehensive Rust development and build container with LLVM/Clang toolchain.
 - **Ladybug Version**: v0.14.1
 - **Features**:
   - Rust toolchain with rustup, cargo, and rustc
-  - LLVM 21 and Clang 21 compilers
+  - LLVM 23 and Clang 23 compilers
   - Clang++'s libc++ standard library
   - Build acceleration: mold linker and sccache
   - Docker CLI, buildx, and compose plugins
@@ -215,7 +215,7 @@ Full development environment (Ubuntu 26.04) with Rust/Clang toolchain and shell 
 - **Repository**: `ghcr.io/casualjim/devenv:latest`
 - **User**: `eng` (non-root, uid 1000)
 - **Features**:
-  - Rust/Clang toolchain (LLVM 22) with mold, sccache, build essentials
+  - Rust/Clang toolchain (LLVM 23) with mold, sccache, build essentials
   - zsh + starship + antidote, hx, eza, fzf
   - Docker CLI + buildx + compose plugins
   - mise (tool manager)

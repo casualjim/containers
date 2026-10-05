@@ -1,5 +1,5 @@
 ARG UBUNTU_RELEASE=26.04
-ARG LLVM_MAJOR=22
+ARG LLVM_MAJOR=23
 
 FROM ubuntu:${UBUNTU_RELEASE} AS rustbuilder
 
@@ -108,6 +108,8 @@ SHELL ["/bin/zsh", "-o", "pipefail", "-c"]
 USER eng
 
 ADD --chown=eng zshrc /home/eng/.zshrc
+ADD --chown=eng zsh_plugins.txt /home/eng/.zsh_plugins.txt
+RUN touch /home/eng/.zsh_history
 
 # Default to bash for interactive use
 CMD ["/bin/zsh"]

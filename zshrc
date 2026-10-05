@@ -17,11 +17,16 @@ export FZF_DEFAULT_OPTS="--ansi"
 export ZSH_CACHE_DIR="${XDG_CACHE_HOME-"$HOME/.cache"}/zsh"
 fpath+=("$HOME/.local/share/zsh/site-functions")
 
+export LANG="en_US.utf-8"
+export JAVA_OPTS="-Dfile.encoding=UTF-8"
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 export CLICOLOR=1
 export VISUAL='hx'
 export EDITOR='hx'
+
+source '/usr/share/zsh-antidote/antidote.zsh'
+antidote load
 
 bindkey '^[[1;5C' forward-word
 bindkey '^[[1;5D' backward-word
@@ -38,4 +43,15 @@ if [ $commands[eza] ]; then
   alias tree='eza --tree --icons --group-directories-first'
 fi
 
+if [ $commands[umber] ]; then
+  if [ $commands[bat] ]; then
+    unfunction cat
+  fi
+  alias cat=umber
+fi
+
 eval "$(starship init zsh)"
+eval "$(mise activate zsh)"
+eval "$(mcfly init zsh)"
+
+if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
