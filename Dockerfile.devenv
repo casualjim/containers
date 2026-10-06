@@ -34,6 +34,7 @@ RUN apt-get update &&\
   starship \
   gnupg \
   ca-certificates \
+  git-delta \
   jq \
   git \
   build-essential \
