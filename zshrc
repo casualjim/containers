@@ -16,6 +16,7 @@ export FZF_DEFAULT_COMMAND="fd --type file --color=always"
 export FZF_DEFAULT_OPTS="--ansi"
 export ZSH_CACHE_DIR="${XDG_CACHE_HOME-"$HOME/.cache"}/zsh"
 fpath+=("$HOME/.local/share/zsh/site-functions")
+mkdir -p "$ZSH_CACHE_DIR/completions"
 
 export LANG="en_US.utf-8"
 export JAVA_OPTS="-Dfile.encoding=UTF-8"
