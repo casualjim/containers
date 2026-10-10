@@ -15,7 +15,7 @@ variable "RUST_VERSION" {
 }
 
 variable "BUN_VERSION" {
-  default = "1.4.2"
+  default = "1.4.3"
 }
 
 variable "TAG" {
@@ -35,7 +35,7 @@ variable "UMBER_VERSION" {
 }
 
 variable "PG_SEARCH_VERSION" {
-  default = "0.26.0"
+  default = "0.26.1"
 }
 
 
