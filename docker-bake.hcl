@@ -11,7 +11,7 @@ variable "REGISTRY" {
 }
 
 variable "RUST_VERSION" {
-  default = "1.99.0"
+  default = "1.99.1"
 }
 
 variable "BUN_VERSION" {
@@ -35,7 +35,7 @@ variable "UMBER_VERSION" {
 }
 
 variable "PG_SEARCH_VERSION" {
-  default = "0.26.1"
+  default = "0.26.2"
 }
 
 
