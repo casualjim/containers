@@ -320,28 +320,8 @@ target "devenv" {
   ]
 }
 
-# devenv-omp: devenv + external tool deps omp shells out to; published as devagent
-# (python3 for eval kernel, gh CLI, mise-managed bun/rg/ast-grep/jj/fd/fzf,
-#  podman container engine, docker CLI as pure client on the podman socket)
-target "devenv-omp" {
-  dockerfile = "Dockerfile.devenv-omp"
-  context    = "."
-  platforms  = ["linux/amd64", "linux/arm64"]
-  contexts = {
-    devenv = "target:devenv"
-  }
-  args = {
-    UBUNTU_RELEASE = UBUNTU_RELEASE
-    OMP_VERSION    = "latest"
-  }
-  tags = [
-    "${REGISTRY}/devagent:${TAG}",
-    "${REGISTRY}/devagent:${UBUNTU_RELEASE}",
-    "${REGISTRY}/devagent:${UBUNTU_RELEASE}-${BUILD_NUMBER}",
-  ]
-}
 
 # Group to build all images
 group "default" {
-  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-udev-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "rustbuilder", "netdebug", "timescaledb", "cloudsandbox", "devenv", "devenv-omp"]
+  targets = ["static", "libc", "libc-ssl", "libcxx", "libcxx-ssl", "libcxx-udev-ssl", "libcxx-ssl-tesseract", "libcxx-ssl-ladybug", "lbug-cli", "sqlx-cli", "bun", "rustbuilder", "netdebug", "timescaledb", "cloudsandbox", "devenv"]
 }
