@@ -27,7 +27,7 @@ variable "BUILD_NUMBER" {
 }
 
 variable "LADYBUG_VERSION" {
-  default = "v0.20.3"
+  default = "v0.22.3"
 }
 
 variable "UMBER_VERSION" {

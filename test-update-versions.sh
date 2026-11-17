@@ -252,6 +252,20 @@ test_workflow_syntax() {
     fi
 }
 
+test_ladybug_version() {
+    local latest current updated
+    latest=$("$REPO_ROOT/scripts/get-ladybug-version.sh") || { test_fail "Ladybug release lookup failed"; return 1; }
+    current=$("$REPO_ROOT/scripts/get-current-ladybug-version.sh") || { test_fail "Ladybug version extraction failed"; return 1; }
+    cp "$REPO_ROOT/docker-bake.hcl" "$TEST_DIR/ladybug-bake.hcl"
+    "$REPO_ROOT/scripts/update-ladybug-version.sh" v99.99.99 "$TEST_DIR/ladybug-bake.hcl"
+    updated=$("$REPO_ROOT/scripts/get-current-ladybug-version.sh" "$TEST_DIR/ladybug-bake.hcl")
+    if [[ "$latest" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ && "$current" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ && "$updated" == v99.99.99 ]]; then
+        test_pass "Ladybug release lookup and version update work"
+    else
+        test_fail "Ladybug release lookup or version update failed"
+    fi
+}
+
 # Main test execution
 main() {
     echo "========================================="
@@ -271,6 +285,9 @@ main() {
     
     test_pg_search_version_fetch || true
     echo ""
+    test_ladybug_version || true
+    echo ""
+
     
     test_version_extraction || true
     echo ""

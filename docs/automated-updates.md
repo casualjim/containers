@@ -10,6 +10,7 @@ Version update workflow:
 Managed values in `docker-bake.hcl`:
 - `RUST_VERSION`
 - `BUN_VERSION`
+- `LADYBUG_VERSION`
 
 ### Schedule
 
@@ -22,6 +23,7 @@ Managed values in `docker-bake.hcl`:
    - Uses reusable scripts in `scripts/` directory
    - Queries the latest stable Rust version from the official Rust stable channel
    - Queries the latest stable Bun release from GitHub (excludes pre-releases)
+   - Queries the latest stable Ladybug release from GitHub
    
 2. **Change Detection**
    - Compares fetched versions with current versions in `docker-bake.hcl`
@@ -75,6 +77,7 @@ No manual intervention is required. However, you can:
 
 - **Rust**: https://static.rust-lang.org/dist/channel-rust-stable.toml
 - **Bun**: https://api.github.com/repos/oven-sh/bun/releases
+- **Ladybug**: https://api.github.com/repos/LadybugDB/ladybug/releases/latest
 
 ### Extending
 

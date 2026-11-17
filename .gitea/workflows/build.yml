@@ -33,6 +33,12 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.MIRROR_GITHUB_TOKEN }}
 
+      - name: Set bake variables
+        run: |
+          awk '/^variable "[A-Z_]+" \{$/ { name = $2; gsub(/"/, "", name) }
+               name && $1 == "default" { value = $3; gsub(/"/, "", value); print name "=" value; name = "" }' docker-bake.hcl >> "$GITHUB_ENV"
+          echo "BUILD_NUMBER=${{ github.run_number }}" >> "$GITHUB_ENV"
+
       - name: Build and push with bake
         uses: docker/bake-action@v6
         with:
@@ -41,5 +47,3 @@ jobs:
           targets: static,libc,libc-ssl,libcxx,libcxx-ssl,libcxx-udev-ssl,libcxx-ssl-tesseract,libcxx-ssl-ladybug,lbug-cli,sqlx-cli,bun,rustbuilder,netdebug,timescaledb,cloudsandbox,devenv
           set: |
             *.platform=${{ github.event_name == 'pull_request' && 'linux/amd64' || 'linux/amd64,linux/arm64' }}
-        env:
-          BUILD_NUMBER: ${{ github.run_number }}

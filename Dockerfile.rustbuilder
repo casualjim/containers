@@ -49,8 +49,7 @@ ENV CXXFLAGS=-stdlib=libc++ \
   CXXSTDLIB=c++ \
   RUSTUP_HOME=/usr/local/rustup \
   CARGO_HOME=/usr/local/cargo \
-  PATH=/usr/local/cargo/bin:$PATH \
-  RUST_VERSION=${RUST_VERSION}
+  PATH=/usr/local/cargo/bin:$PATH
 
 
 RUN set -eux; \
@@ -148,8 +147,6 @@ RUN curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/ca
 # squash layers
 FROM scratch AS final
 
-ARG RUST_VERSION
-
 ENV CXXFLAGS=-stdlib=libc++ \
   CC=clang \
   CXX=clang++ \
@@ -157,7 +154,6 @@ ENV CXXFLAGS=-stdlib=libc++ \
   RUSTUP_HOME=/usr/local/rustup \
   CARGO_HOME=/usr/local/cargo \
   PATH=/usr/local/cargo/bin:$PATH \
-  RUST_VERSION=${RUST_VERSION} \
   RUSTC_WRAPPER=/usr/bin/sccache \
   SCCACHE_DIR=/root/.cache/sccache \
   SCCACHE_CACHE_SIZE=10G \

@@ -127,6 +127,12 @@ Updates the PG_SEARCH_VERSION in `docker-bake.hcl`.
 
 **Effect:** Updates the `default` value in the `PG_SEARCH_VERSION` variable block
 
+### Ladybug version scripts
+
+- `get-ladybug-version.sh` fetches the latest stable GitHub release.
+- `get-current-ladybug-version.sh [file]` reads `LADYBUG_VERSION`.
+- `update-ladybug-version.sh <version> [file]` updates it.
+
 ### `update-readme-rust-version.sh`
 Updates the Rust version in `README.md` documentation.
 
