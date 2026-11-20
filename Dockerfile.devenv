@@ -9,13 +9,13 @@ ARG LLVM_MAJOR
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update &&\
-  apt-get install -y software-properties-common lsb-release tzdata locales sudo &&\
+  apt-get install -y software-properties-common lsb-release tzdata locales sudo zsh &&\
   echo 'en_US.UTF-8 UTF-8' > /etc/locale.gen &&\
   locale-gen &&\
   export LANG='en_US.UTF-8' &&\
   ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &&\
   groupmod -n eng ubuntu &&\
-  usermod -u 1000 -l eng -d /home/eng -m ubuntu &&\
+  usermod -u 1000 -l eng -d /home/eng -m -s /bin/zsh ubuntu &&\
   id eng &&\
   mkdir -p /etc/sudoers.d && echo 'eng ALL=(ALL:ALL) NOPASSWD: ALL' > /etc/sudoers.d/eng && chmod 0440 /etc/sudoers.d/eng && visudo -cf /etc/sudoers.d/eng
 
