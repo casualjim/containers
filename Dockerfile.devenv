@@ -115,3 +115,26 @@ RUN touch /home/eng/.zsh_history
 # Default to bash for interactive use
 CMD ["/bin/zsh"]
 WORKDIR /home/eng
+
+RUN set -eux; \
+  mkdir -p /home/eng/.config/mise && printf '%s\n' \
+  '[settings]' \
+  'npm.shell_out = true' \
+  'idiomatic_version_file_enable_tools = ["pnpm","bun", "npm", "rust", "go", "uv"]' \
+  '[env]' \
+  '_.path = ["{{config_root}}/node_modules/.bin"]' \
+  '[tools]' \
+  'ripgrep = "latest"' \
+  'jujutsu = "latest"' \
+  'fd = "latest"' \
+  'fzf = "latest"' \
+  'github-cli = "latest"' \
+  'node = "lts"' \
+  'pnpm = "latest"' \
+  'bun = "latest"' \
+  'fnox = "latest"' \
+  '"aqua:cantino/mcfly" = "latest"' \
+  '"github:casualjim/zage" = "latest"' \
+  '"github:casualjim/umber" = "latest"' \
+  > /home/eng/.config/mise/config.toml; &&\
+  mise trust -a /home/eng && mise install
